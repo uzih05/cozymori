@@ -1,0 +1,189 @@
+---
+title: "리플레이 테스트"
+description: "과거 성공 실행을 재생하여 회귀 테스트를 수행합니다."
+order: 16
+category: VectorWave
+---
+
+## 왜 리플레이 테스트인가?
+
+기존의 `assert a == b` 방식은 생성형 AI에 적합하지 않습니다 -- 동일한 프롬프트가 서로 다른 유효한 출력을 생성할 수 있기 때문입니다. VectorWave의 리플레이 테스트는 **검증된 과거 실행**을 기준으로 정확 일치와 시맨틱 유사도를 모두 사용하여 이 문제를 해결합니다.
+
+## 리플레이 활성화
+
+입력과 출력을 저장하여 향후 리플레이에 활용하려면 `replay=True`를 추가합니다:
+
+```python
+@vectorize(
+    replay=True,
+    capture_return_value=True,
+    capture_inputs=True,
+    auto=True,
+)
+async def generate_response(query: str):
+    return await llm.complete(query)
+```
+
+이제 모든 성공적인 실행이 잠재적 테스트 케이스로 저장됩니다.
+
+## 리플레이 테스트 실행
+
+### 기본 리플레이
+
+```python
+from vectorwave import VectorWaveReplayer
+
+replayer = VectorWaveReplayer()
+
+# 함수의 최근 20건의 실행을 리플레이
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,
+    golden_only=True,  # Golden Dataset만 테스트
+)
+
+print(f"Passed: {results['passed']}")
+print(f"Failed: {results['failed']}")
+# → { passed: 18, failed: 2 }
+```
+
+### 비교 모드
+
+#### 정확 일치
+
+출력을 문자 단위로 비교합니다:
+
+```python
+results = replayer.replay(
+    function_full_name="app.calculate_total",
+    mode="exact",
+    limit=50,
+)
+```
+
+적합한 경우: 결정적 함수 (수학 연산, 데이터 변환).
+
+#### 시맨틱 비교
+
+임베딩 코사인 유사도를 사용하여 출력을 비교합니다:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    mode="semantic",
+    threshold=0.85,  # 통과를 위한 최소 유사도
+    limit=50,
+)
+```
+
+적합한 경우: 생성형 AI, NLP 출력, 요약.
+
+### 상세 결과
+
+```python
+for test in results["details"]:
+    print(f"Input: {test['input_preview']}")
+    print(f"Expected: {test['expected_preview']}")
+    print(f"Actual: {test['actual_preview']}")
+    print(f"Similarity: {test['similarity']:.2f}")
+    print(f"Status: {'PASS' if test['passed'] else 'FAIL'}")
+    print("---")
+```
+
+## 베이스라인 업데이트
+
+함수의 동작이 정당하게 변경된 경우(새 모델, 프롬프트 업데이트), Golden Dataset을 갱신합니다:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,
+    update_baseline=True,  # 새로운 출력으로 Golden Dataset 업데이트
+)
+```
+
+> **주의:** 새 출력이 올바른지 확인한 후에만 `update_baseline=True`를 사용하세요. 기존 Golden 항목이 덮어씌워집니다.
+
+## VectorCheck를 활용한 CLI 테스트
+
+CI/CD 통합을 위해 [VectorCheck](/docs/vectorcheck) CLI를 사용합니다:
+
+```bash
+# 설치
+pip install vectorcheck
+
+# 모든 리플레이 테스트 실행
+vw test --target all
+
+# 시맨틱 비교 모드
+vw test --target all --semantic --threshold 0.85
+
+# 특정 함수 테스트
+vw test --target app.generate_response --semantic
+
+# 오프라인 분석을 위한 테스트 데이터 내보내기
+vw export --target app.generate_response --output data.jsonl
+```
+
+## CI/CD 통합
+
+### GitHub Actions
+
+```yaml
+name: VectorWave Regression Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      weaviate:
+        image: semitechnologies/weaviate:1.26.1
+        ports:
+          - 8080:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install vectorwave vectorcheck
+      - run: vw test --target all --semantic --threshold 0.85
+```
+
+## 테스트 전략
+
+### 스모크 테스트
+
+함수가 여전히 정상 동작하는지 빠르게 확인합니다:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=5,
+    golden_only=True,
+    mode="semantic",
+    threshold=0.70,  # 낮은 임계값, 합리적인 결과인지만 확인
+)
+assert results["failed"] == 0
+```
+
+### 전체 회귀 테스트
+
+전체 Golden Dataset에 대한 철저한 테스트:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=None,  # 모든 Golden 항목
+    golden_only=True,
+    mode="semantic",
+    threshold=0.90,  # 엄격한 임계값
+)
+assert results["failed"] / results["total"] < 0.05  # 최대 5% 실패율
+```
+
+## 다음 단계
+
+- [RAG 검색](/docs/vectorwave-search) -- AI로 코드베이스 검색
+- [VectorCheck CLI](/docs/vectorcheck) -- 전체 CLI 테스트 프레임워크
+- [고급 설정](/docs/vectorwave-advanced) -- 커스텀 프로퍼티 및 태깅

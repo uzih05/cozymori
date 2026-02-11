@@ -1,0 +1,173 @@
+---
+title: 빠른 시작
+description: 5분 안에 cozymori 도구를 설치하고 실행하세요.
+order: 2
+category: 시작하기
+---
+
+## 사전 요구사항
+
+- Python 3.10 이상
+- Docker (Weaviate 실행용)
+
+## 1. Weaviate 시작
+
+VectorWave는 Weaviate를 벡터 데이터베이스로 사용합니다. Docker로 시작하세요:
+
+```bash
+docker run -d \
+  --name weaviate \
+  -p 8080:8080 \
+  -p 50051:50051 \
+  cr.weaviate.io/semitechnologies/weaviate:latest
+```
+
+## 2. VectorWave 설치
+
+```bash
+pip install vectorwave
+```
+
+## 3. 초기화 및 추적 시작
+
+```python
+from vectorwave import vectorize, initialize_database
+
+# Weaviate 컬렉션 생성
+initialize_database()
+
+# 데코레이터 하나로 함수를 추적하고 캐싱
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,
+    team="my-team"
+)
+async def generate_response(query: str):
+    # 여기에 LLM 호출
+    return await llm.complete(query)
+```
+
+이게 전부입니다. `generate_response`의 모든 호출은 이제:
+- **벡터화** — 입력이 임베딩으로 변환됩니다
+- **추적** — 실행이 trace_id/span_id로 기록됩니다
+- **캐싱** — 유사한 쿼리는 캐시에서 즉시 반환됩니다
+
+## 4. 자동 치유 (선택사항)
+
+에러가 발생하면 AI가 진단하고 수정합니다:
+
+```python
+from vectorwave import VectorWaveHealer
+
+healer = VectorWaveHealer(model="gpt-4-turbo")
+
+# 최근 에러를 진단하고 수정 PR 생성
+result = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,
+    create_pr=True
+)
+```
+
+Healer의 동작:
+1. Weaviate에서 함수 정의와 최근 에러 로그를 검색
+2. GPT-4를 위한 전체 컨텍스트 프롬프트를 구성
+3. AST 파싱으로 소스 파일을 패치
+4. 브랜치를 만들고 PyGithub으로 GitHub PR을 생성
+
+## 5. 드리프트 감지 (선택사항)
+
+입력이 정상 패턴에서 벗어나는 것을 모니터링합니다:
+
+```python
+from vectorwave import VectorWaveDatasetManager
+
+dm = VectorWaveDatasetManager()
+
+# 검증된 실행을 "Golden" 상태로 승격
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="QA팀 검증 완료",
+    tags=["v2", "production"]
+)
+
+# 새로운 Golden 후보 추천
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5
+)
+```
+
+새 입력이 Golden Dataset 중심점에서 드리프트 임계값을 초과하면, VectorWave가 웹훅 알림(Discord, Slack 등)을 전송합니다.
+
+## 6. 대시보드 실행
+
+### VectorSurfer (풀스택)
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer
+npm install
+npm run dev  # Next.js + FastAPI 동시 시작
+```
+
+`http://localhost:3000`에서 확인:
+- 실시간 KPI 카드 (실행 횟수, 성공률, 평균 응답시간)
+- 실행 타임라인 차트
+- 분산 트레이스 워터폴
+- AI 에러 자동 진단
+- 리플레이 테스트 UI
+
+### VectorSurferSTL (경량)
+
+```bash
+git clone https://github.com/Cozymori/VectorSurferSTL
+cd VectorSurferSTL
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+## 7. VectorCheck로 회귀 테스트
+
+```bash
+pip install vectorcheck
+
+# 모든 추적된 함수 테스트
+vw test --target all
+
+# 시맨틱 비교 모드 (생성형 AI용)
+vw test --target all --semantic --threshold 0.85
+
+# 실행 로그를 오프라인 분석용으로 내보내기
+vw export --target my_module.my_function --output data.jsonl
+```
+
+## 설정
+
+### 환경 변수
+
+| 변수 | 필수 여부 | 설명 |
+|---|---|---|
+| `OPENAI_API_KEY` | 캐싱/치유 기능용 | 임베딩과 LLM 기능을 위한 OpenAI API 키 |
+| `WEAVIATE_URL` | 아니오 | Weaviate URL (기본값: `http://localhost:8080`) |
+| `VECTORWAVE_VECTORIZER` | 아니오 | `openai` 또는 `huggingface` (기본값: `huggingface`) |
+
+### @vectorize 옵션
+
+| 옵션 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `semantic_cache` | bool | `False` | 시맨틱 캐싱 활성화 |
+| `cache_threshold` | float | `0.9` | 캐시 히트 코사인 유사도 임계값 |
+| `capture_return_value` | bool | `False` | 반환값을 Weaviate에 저장 |
+| `capture_inputs` | bool | `False` | 모든 함수 파라미터를 자동 캡처 |
+| `replay` | bool | `False` | 리플레이 기반 회귀 테스트 활성화 |
+| `auto` | bool | `False` | LLM으로 메타데이터 자동 생성 |
+| `search_description` | str | `None` | 벡터 검색 최적화 설명 |
+| `team` | str | `None` | 필터링용 팀 태그 |
+
+## 다음은?
+
+- [VectorWave](/vectorwave) 제품 페이지에서 상세 기능을 확인하세요
+- [VectorSurfer](/vectorsurf) 대시보드를 둘러보세요
+- [GitHub](https://github.com/Cozymori)에서 소스 코드와 이슈를 확인하세요

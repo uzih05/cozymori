@@ -1,0 +1,169 @@
+---
+title: "시맨틱 캐싱"
+description: "유사한 입력을 캐싱하여 LLM 비용과 지연시간을 절감합니다."
+order: 13
+category: VectorWave
+---
+
+## 시맨틱 캐싱의 동작 원리
+
+기존 캐싱은 입력을 **정확히** 매칭합니다. 시맨틱 캐싱은 입력을 **의미** 기반으로 매칭합니다.
+
+```
+"Python 버그를 어떻게 고치나요?"     → Cache MISS → Execute → 2.0s
+"Python 디버깅 방법을 알려주세요."   → Cache HIT  → Return  → 0.02s
+```
+
+VectorWave는 함수 입력을 임베딩 벡터로 변환하고 코사인 유사도로 비교합니다. 새로운 입력이 캐시된 입력과 충분히 유사하면, 저장된 결과를 즉시 반환합니다.
+
+## 기본 사용법
+
+```python
+import time
+from vectorwave import vectorize, initialize_database
+
+initialize_database()
+
+@vectorize(semantic_cache=True, cache_threshold=0.95, auto=True)
+def expensive_llm_task(query: str):
+    time.sleep(2)  # Simulates LLM API call
+    return f"Processed result for: {query}"
+
+# 첫 번째 호출: Cache Miss → 정상 실행 (2.0s)
+print(expensive_llm_task("How do I fix a Python bug?"))
+
+# 두 번째 호출: Cache Hit → 즉시 반환 (0.02s!)
+print(expensive_llm_task("Tell me how to debug Python code."))
+```
+
+## 설정
+
+### cache_threshold
+
+두 입력을 "충분히 유사하다"고 판단하는 코사인 유사도 임계값입니다.
+
+```python
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,  # 0.0 to 1.0
+)
+```
+
+| 임계값 | 동작 | 사용 사례 |
+|---|---|---|
+| `0.99` | 매우 엄격 -- 거의 동일한 입력만 허용 | 금융 계산 |
+| `0.95` | 권장 기본값 -- 유사한 의미 매칭 | 일반 LLM 캐싱 |
+| `0.90` | 관대 -- 넓은 범위 매칭 | FAQ / 지식 베이스 |
+| `0.85` | 매우 관대 -- 느슨한 시맨틱 매칭 | 창의적 / 탐색적 용도 |
+
+### capture_return_value
+
+**캐싱에 필수입니다.** 이 설정 없이는 VectorWave가 캐시된 결과를 반환할 수 없습니다:
+
+```python
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,  # 반환값 저장
+)
+def my_function(query: str):
+    return llm.complete(query)
+```
+
+## 캐시 스코프 (멀티테넌시)
+
+기본적으로 캐시는 전역입니다. `semantic_cache_scope`를 사용하여 프로젝트 또는 사용자별로 캐시를 격리할 수 있습니다:
+
+```python
+# 프로젝트 수준 격리
+@vectorize(
+    semantic_cache=True,
+    semantic_cache_scope="project-alpha",
+)
+def project_alpha_query(query: str):
+    return llm.complete(query, system_prompt=alpha_prompt)
+
+@vectorize(
+    semantic_cache=True,
+    semantic_cache_scope="project-beta",
+)
+def project_beta_query(query: str):
+    return llm.complete(query, system_prompt=beta_prompt)
+```
+
+두 함수가 동일한 쿼리를 받더라도, 캐시는 완전히 분리됩니다.
+
+### 동적 스코프
+
+런타임 값을 사용하여 사용자별 캐싱이 가능합니다:
+
+```python
+@vectorize(
+    semantic_cache=True,
+    semantic_cache_scope=f"user-{current_user.id}",
+)
+def personalized_query(query: str):
+    return llm.complete(query, user_context=current_user.profile)
+```
+
+## 캐시 조회 흐름
+
+```
+Input: "How do I debug Python?"
+         │
+         ▼
+   Embedding Vector
+   [0.12, -0.45, 0.78, ...]
+         │
+         ▼
+   HNSW Index Search
+   (Weaviate nearVector)
+         │
+         ▼
+   Cosine Similarity Check
+   ┌──────────────────────────┐
+   │ Cached: "Fix Python bug" │
+   │ Similarity: 0.97         │
+   │ Threshold: 0.95          │
+   │ Result: HIT              │
+   └──────────────────────────┘
+         │
+         ▼
+   Return Cached Result
+   (0.02s vs 2.5s)
+```
+
+## 성능 영향
+
+| 지표 | 캐싱 미적용 | 캐싱 적용 (히트) |
+|---|---|---|
+| 지연시간 | ~2.5s (LLM API) | **~0.02s** |
+| 호출당 비용 | ~$0.03 | **$0.00** |
+| 토큰 사용량 | 전체 | **제로** |
+
+반복적인 쿼리가 많은 애플리케이션(고객 지원, FAQ 봇, 검색)에서 캐싱은 일반적으로 **60-90% 히트율**을 달성하여 LLM 비용을 비례적으로 절감합니다.
+
+## 캐시 성능 모니터링
+
+VectorWave의 실행 로그를 통해 캐시 히트율을 확인할 수 있습니다:
+
+```python
+from vectorwave import search_executions
+
+# 특정 함수의 모든 캐시된 실행 조회
+cached = search_executions(
+    function_name="expensive_llm_task",
+    filters={"cache_hit": True},
+    limit=100,
+)
+
+print(f"Cache hits: {len(cached)}")
+```
+
+또는 [VectorSurfer](/docs/vectorsurf-overview)를 사용하여 실시간 캐시 히트율 차트가 포함된 시각적 대시보드를 활용하세요.
+
+## 다음 단계
+
+- [자동 치유](/docs/vectorwave-healing) -- 자동 에러 진단
+- [드리프트 감지](/docs/vectorwave-drift) -- 입력 품질 모니터링
+- [API 레퍼런스](/docs/vectorwave-api) -- 모든 캐싱 파라미터

@@ -1,0 +1,107 @@
+---
+title: 소개
+description: cozymori는 무엇이고 왜 사용해야 할까요?
+order: 1
+category: 시작하기
+---
+
+## cozymori에 오신 것을 환영합니다
+
+cozymori는 오픈소스 AI 관측 도구를 만드는 조직입니다. 우리의 미션은 AI 함수의 모니터링, 캐싱, 치유를 직관적이고 — 감히 말하자면 — 아늑하게 만드는 것입니다.
+
+## 생태계
+
+### VectorWave
+
+데코레이터 기반 Python 프레임워크로, 함수 호출을 벡터화하여 Weaviate에 저장합니다. 시맨틱 캐싱, 자동 치유, 분산 트레이싱, 드리프트 감지 기능을 AI/LLM 애플리케이션에 제공합니다.
+
+```bash
+pip install vectorwave
+```
+
+**주요 기능:**
+- `@vectorize` 데코레이터로 모든 함수를 추적하고 캐싱
+- 시맨틱 캐싱 — 유사한 입력은 즉시 캐시된 결과를 반환
+- 자동 치유 — AI가 에러를 분석하고 수정 코드를 생성하여 GitHub PR 자동 생성
+- trace_id/span_id 기반 분산 트레이싱
+- Golden Dataset 기반 시맨틱 드리프트 감지 + 웹훅 알림
+- RAG 기반 코드 Q&A — AI로 코드베이스 탐색
+- PyO3 기반 Rust 네이티브 배치 라이팅
+
+### VectorSurfer
+
+VectorWave의 풀스택 관측 대시보드입니다. Next.js 16 + FastAPI 기반으로, 실시간 모니터링, 트레이스 시각화, AI 에러 진단, 리플레이 테스트를 제공합니다.
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer && npm run dev
+```
+
+**주요 기능:**
+- 드래그 앤 드롭 벤토 그리드 대시보드
+- 분산 트레이스 워터폴 시각화
+- AI Healer — GPT-4 기반 에러 자동 진단 (단건 및 배치)
+- 정확 일치 및 시맨틱 비교 리플레이 테스트
+- 하이브리드 시맨틱 검색 + RAG Q&A
+- 다국어 UI (영어, 일본어, 한국어)
+
+### VectorSurferSTL
+
+VectorSurfer의 경량 Streamlit 대안입니다. 동일한 핵심 모니터링 기능을 단일 프로세스 Python 앱으로 제공합니다 — 빠른 세팅과 로컬 개발에 적합합니다.
+
+```bash
+git clone https://github.com/Cozymori/VectorSurferSTL
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+### VectorCheck
+
+AI/LLM 애플리케이션을 위한 CLI 회귀 테스트 프레임워크입니다. 생성형 AI에서 기존 `assert a == b`는 실패합니다 — VectorCheck는 벡터 유사도와 LLM 심사 평가를 대신 사용합니다.
+
+```bash
+pip install vectorcheck
+
+# 회귀 테스트 실행
+vw test --target all --semantic --threshold 0.85
+```
+
+**테스트 모드:**
+- 정확 일치 — 출력을 문자 그대로 비교
+- 벡터 유사도 — 임베딩 코사인 유사도로 비교
+- LLM 심사 — GPT-4를 사용하여 시맨틱 동등성 평가
+
+## 아키텍처
+
+```
+┌──────────────────────────────────────────┐
+│              VectorWave                   │
+│  (코어 SDK — 추적, 캐싱, 치유)            │
+│  실행 데이터를 Weaviate에 저장             │
+└──────────┬───────────┬───────────┬───────┘
+           │           │           │
+           v           v           v
+┌──────────┐ ┌────────────┐ ┌───────────┐
+│VectorSurfer│ │VectorSurfer│ │VectorCheck│
+│(Next.js +  │ │STL         │ │(CLI 테스트 │
+│ FastAPI)   │ │(Streamlit) │ │ 프레임워크)│
+└────────────┘ └────────────┘ └───────────┘
+```
+
+## 철학
+
+- **Developer First** — 개발자가 만들고, 개발자를 위해 설계된 API
+- **Zero Bloat** — 데코레이터 하나로 모든 것을 해결, 설정 비대화 없음
+- **Python Native** — Python AI 생태계를 위해 구축, 성능은 Rust로
+- **Open Source** — MIT 라이선스, 커뮤니티 주도
+
+## 요구사항
+
+- Python 3.10 — 3.13
+- Docker (Weaviate 벡터 데이터베이스용)
+- OpenAI API 키 (자동 치유 및 RAG 기능용)
+
+## 다음 단계
+
+- [빠른 시작](/docs/quickstart) 가이드를 읽고 시작하세요
+- [VectorWave](/vectorwave)와 [VectorSurfer](/vectorsurf) 제품 페이지를 둘러보세요

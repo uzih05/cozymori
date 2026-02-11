@@ -1,0 +1,123 @@
+---
+title: 설치
+description: VectorWave를 설치하고 Weaviate 벡터 데이터베이스를 설정합니다.
+order: 11
+category: VectorWave
+---
+
+## 사전 요구사항
+
+- **Python** 3.10 — 3.13
+- **Docker** (Weaviate 벡터 데이터베이스 실행용)
+- (선택) **OpenAI API 키** — AI 자동 문서화, 고성능 임베딩, 자동 치유 기능용
+
+## 1. Weaviate 시작
+
+VectorWave는 [Weaviate](https://weaviate.io/)를 벡터 데이터베이스로 사용합니다.
+
+### Docker Compose (권장)
+
+`docker-compose.yml` 생성:
+
+```yaml
+version: '3.4'
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: semitechnologies/weaviate:1.26.1
+    ports:
+    - 8080:8080
+    - 50051:50051
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai'
+      CLUSTER_HOSTNAME: 'node1'
+```
+
+```bash
+docker-compose up -d
+```
+
+## 2. VectorWave 설치
+
+```bash
+pip install vectorwave
+```
+
+## 3. 환경 변수
+
+프로젝트 루트에 `.env` 파일 생성:
+
+```bash
+# 벡터라이저 (택 1)
+VECTORWAVE_VECTORIZER=huggingface    # 무료, 로컬 실행 (기본값)
+# VECTORWAVE_VECTORIZER=openai_client  # 높은 품질, API 키 필요
+
+# OpenAI (openai_client 벡터라이저, 자동 치유, RAG에 필요)
+OPENAI_API_KEY=sk-...
+
+# Weaviate 연결 (선택사항)
+WEAVIATE_URL=http://localhost:8080
+```
+
+### 벡터라이저 옵션
+
+| 벡터라이저 | 비용 | 품질 | 속도 | 설정 |
+|---|---|---|---|---|
+| `huggingface` | 무료 | 양호 | 로컬 CPU/GPU | API 키 불필요 |
+| `openai_client` | $0.0001/1K 토큰 | 우수 | API 호출 | `OPENAI_API_KEY` 필요 |
+
+## 4. 데이터베이스 초기화
+
+처음 사용 전 Weaviate 컬렉션을 초기화합니다:
+
+```python
+from vectorwave import initialize_database
+
+initialize_database()
+```
+
+### 스키마 마이그레이션
+
+VectorWave 업그레이드 시 스키마가 변경되면:
+
+```python
+from vectorwave import update_database_schema
+
+update_database_schema()
+```
+
+무중단 마이그레이션으로 기존 데이터가 보존됩니다.
+
+## 5. 설치 확인
+
+```python
+from vectorwave import vectorize, initialize_database
+
+initialize_database()
+
+@vectorize(auto=True)
+def hello(name: str):
+    return f"Hello, {name}!"
+
+result = hello("World")
+print(result)  # "Hello, World!"
+```
+
+에러 없이 실행되면 VectorWave가 준비된 것입니다.
+
+## 다음 단계
+
+- [@vectorize 코어](/docs/vectorwave-core) — 핵심 데코레이터 학습
+- [시맨틱 캐싱](/docs/vectorwave-caching) — 비용 절감을 위한 캐싱 활성화
+- [빠른 시작](/docs/quickstart) — 전체 워크스루

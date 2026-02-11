@@ -1,0 +1,201 @@
+---
+title: "자동 치유"
+description: "자율 에러 진단, 코드 수정 생성, GitHub PR 자동 생성."
+order: 14
+category: VectorWave
+---
+
+## 자동 치유의 동작 원리
+
+`@vectorize` 데코레이터가 적용된 함수에서 에러가 발생하면, VectorWave는 자동으로:
+
+1. 에러를 **감지**하고 전체 컨텍스트와 함께 저장
+2. RAG를 활용하여 근본 원인을 **진단**
+3. LLM + AST 파싱을 사용하여 코드 수정을 **생성**
+4. 수정 사항이 포함된 GitHub Pull Request를 **제출**
+
+```
+에러 발생 → RAG 진단 → LLM 코드 수정 → AST 패치 → GitHub PR
+```
+
+## 빠른 예제
+
+```python
+@vectorize(auto=True)
+def risky_calculation(a, b):
+    return a / b
+
+risky_calculation(10, 0)  # ZeroDivisionError!
+```
+
+자동으로 수행되는 과정:
+
+1. `AutoHealerBot`이 `ZeroDivisionError`를 감지
+2. Weaviate에서 소스 코드와 에러 스택 트레이스를 검색
+3. 분석을 위해 GPT-4에 컨텍스트를 전송
+4. 0으로 나누기 방지 코드가 포함된 패치 버전을 생성
+5. 새 브랜치를 만들고 **GitHub Pull Request**를 오픈
+
+## VectorWaveHealer 사용법
+
+### 기본 사용법
+
+```python
+from vectorwave import VectorWaveHealer
+
+healer = VectorWaveHealer(model="gpt-4-turbo")
+
+# 특정 함수의 최근 에러를 진단
+diagnosis = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,
+    create_pr=True,  # 수정 사항이 포함된 GitHub PR 생성
+)
+
+print(diagnosis)
+# {
+#   "error_type": "ZeroDivisionError",
+#   "root_cause": "No guard for zero denominator",
+#   "fix_description": "Added zero-check with fallback",
+#   "pr_url": "https://github.com/org/repo/pull/42"
+# }
+```
+
+### 진단만 수행 (PR 미생성)
+
+```python
+diagnosis = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,
+    create_pr=False,  # 진단만 수행, PR은 생성하지 않음
+)
+
+print(diagnosis["root_cause"])
+print(diagnosis["suggested_fix"])
+```
+
+### 배치 치유
+
+모든 추적된 함수의 최근 에러를 일괄 진단하고 수정합니다:
+
+```python
+results = healer.batch_heal(
+    lookback_minutes=120,
+    create_pr=True,
+    max_prs=5,  # 생성할 PR 수 제한
+)
+
+for result in results:
+    print(f"{result['function_name']}: {result['pr_url']}")
+```
+
+## 치유 파이프라인
+
+### 1단계: 에러 감지
+
+`@vectorize` 함수가 실패하면 실행 로그가 다음 정보와 함께 Weaviate에 저장됩니다:
+
+- `status: "error"`
+- 전체 예외 타입 및 메시지
+- 스택 트레이스
+- 에러를 유발한 함수 입력
+- 함수의 소스 코드
+
+### 2단계: RAG 기반 진단
+
+Healer는 저장된 데이터에 대해 RAG 쿼리를 수행합니다:
+
+1. `VectorWaveFunctions`에서 함수의 소스 코드를 검색
+2. `VectorWaveExecutions`에서 최근 에러 로그를 검색
+3. 유사한 과거 에러와 해결 사례를 검색
+4. 모든 컨텍스트를 포함한 종합 프롬프트를 구성
+
+### 3단계: LLM 코드 생성
+
+다음 지침과 함께 프롬프트가 GPT-4에 전송됩니다:
+
+- 근본 원인 분석
+- 최소한의 타깃 수정 생성
+- 에러가 아닌 케이스에서 원래 함수의 동작 유지
+- 적절한 에러 핸들링 포함
+
+### 4단계: AST 패칭
+
+VectorWave는 Python의 `ast` 모듈을 사용하여:
+
+1. 원본 소스 파일을 파싱
+2. AST에서 대상 함수를 위치 파악
+3. LLM이 생성한 수정 코드로 교체
+4. 패치된 파일을 작성 (포맷팅 유지)
+
+문자열 치환보다 안전한 방식으로 구문적으로 유효한 Python을 보장합니다.
+
+### 5단계: GitHub PR
+
+PyGithub을 사용하여 VectorWave가:
+
+1. 새 브랜치를 생성: `vectorwave/fix-{function_name}-{timestamp}`
+2. 패치된 파일을 커밋
+3. 다음 내용이 포함된 Pull Request를 오픈:
+   - 에러 설명
+   - 근본 원인 분석
+   - 수정 코드의 diff
+   - 테스트 제안
+
+## 쿨다운 메커니즘
+
+반복적인 에러에 의한 PR 남발을 방지하기 위해, VectorWave는 **쿨다운**을 구현합니다:
+
+- 특정 에러 패턴에 대한 PR을 생성한 후, 설정 가능한 기간 동안 동일한 패턴에 대해 추가 PR을 생성하지 않습니다
+- 기본 쿨다운: 1시간
+- 동일한 수정 시도의 중복 PR로 리포지토리가 넘치는 것을 방지합니다
+
+## 에러 코드 추적
+
+VectorWave는 에러 분류를 위한 3단계 우선순위 시스템을 사용합니다:
+
+1. **커스텀 예외 속성** -- 예외에 `.error_code` 속성이 있으면 우선 사용
+2. **글로벌 매핑 파일** -- 프로젝트 루트의 `.vectorwave_errors.json`이 예외 타입을 코드에 매핑
+3. **기본값** -- 예외 클래스 이름으로 폴백 (예: `ZeroDivisionError`)
+
+### 커스텀 에러 매핑
+
+프로젝트 루트에 `.vectorwave_errors.json`을 생성합니다:
+
+```json
+{
+  "ValueError": "VW-001",
+  "ConnectionError": "VW-002",
+  "TimeoutError": "VW-003",
+  "RateLimitError": "VW-004"
+}
+```
+
+## 설정
+
+### 환경 변수
+
+```bash
+# 자동 치유에 필요
+OPENAI_API_KEY=sk-...
+
+# GitHub 연동 (자동 PR용)
+GITHUB_TOKEN=ghp_...
+GITHUB_REPO=org/repo-name
+```
+
+### Healer 옵션
+
+```python
+healer = VectorWaveHealer(
+    model="gpt-4-turbo",     # 진단용 LLM 모델
+    temperature=0.1,          # 정확한 수정을 위한 낮은 temperature
+    max_tokens=2000,          # 수정 생성 최대 토큰 수
+)
+```
+
+## 다음 단계
+
+- [드리프트 감지](/docs/vectorwave-drift) -- 입력 품질 변화 모니터링
+- [리플레이 테스트](/docs/vectorwave-testing) -- 과거 실행으로 회귀 테스트
+- [VectorSurfer AI Healer](/docs/vectorsurf-features) -- 시각적 치유 대시보드

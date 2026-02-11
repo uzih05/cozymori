@@ -1,0 +1,300 @@
+---
+title: "API 레퍼런스"
+description: "@vectorize 옵션, 환경 변수, 유틸리티 클래스의 완전한 참조."
+order: 19
+category: VectorWave
+---
+
+## @vectorize 파라미터
+
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `semantic_cache` | `bool` | `False` | 유사한 입력에 대한 시맨틱 캐싱 활성화 |
+| `cache_threshold` | `float` | `0.9` | 캐시 히트를 위한 코사인 유사도 임계값 (0.0 -- 1.0) |
+| `semantic_cache_scope` | `str` | `None` | 캐시 격리 스코프 (프로젝트/사용자 수준 멀티테넌시) |
+| `capture_return_value` | `bool` | `False` | 함수 반환값을 Weaviate에 저장 |
+| `capture_inputs` | `bool` | `False` | 모든 함수 파라미터를 자동 캡처 |
+| `replay` | `bool` | `False` | 리플레이 기반 회귀 테스트 활성화 |
+| `auto` | `bool` | `False` | LLM을 통한 함수 설명 자동 생성 |
+| `search_description` | `str` | `None` | 벡터 검색 최적화를 위한 커스텀 설명 |
+| `team` | `str` | `None` | 필터링 및 접근 제어를 위한 팀 태그 |
+| `tags` | `dict` | `None` | 실행 태깅을 위한 키-값 메타데이터 태그 |
+| `drift_threshold` | `float` | `0.25` | 시맨틱 드리프트 감지 임계값 |
+
+### 사용법
+
+```python
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,
+    capture_inputs=True,
+    replay=True,
+    auto=True,
+    team="ml-team",
+    tags={"env": "production"},
+    drift_threshold=0.20,
+)
+async def generate_response(query: str):
+    return await llm.complete(query)
+```
+
+## @trace_span
+
+자식 스팬 트레이싱을 위한 데코레이터입니다. `@vectorize` 부모 컨텍스트 내에서 사용해야 합니다.
+
+```python
+from vectorwave import trace_span
+
+@trace_span
+def child_function(data):
+    return process(data)
+```
+
+파라미터 없이 사용하며, 부모 `@vectorize` 호출의 `trace_id`를 자동으로 상속받습니다.
+
+## 환경 변수
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
+| `OPENAI_API_KEY` | AI 기능에 필요 | -- | 임베딩, 자동 문서화, 치유, RAG용 OpenAI API 키 |
+| `WEAVIATE_URL` | 아니오 | `http://localhost:8080` | Weaviate 데이터베이스 URL |
+| `VECTORWAVE_VECTORIZER` | 아니오 | `huggingface` | 임베딩 제공자: `huggingface` 또는 `openai_client` |
+| `GITHUB_TOKEN` | 자동 PR에 필요 | -- | GitHub 개인 접근 토큰 |
+| `GITHUB_REPO` | 자동 PR에 필요 | -- | GitHub 리포지토리 (형식: `org/repo`) |
+| `VECTORWAVE_TAGS_*` | 아니오 | -- | 글로벌 태그 (예: `VECTORWAVE_TAGS_ENV=production`) |
+
+## 핵심 함수
+
+### initialize_database()
+
+Weaviate 컬렉션을 생성합니다. 최초 사용 전 한 번 호출해야 합니다.
+
+```python
+from vectorwave import initialize_database
+initialize_database()
+```
+
+### update_database_schema()
+
+VectorWave 업그레이드 시 무중단 스키마 마이그레이션을 수행합니다.
+
+```python
+from vectorwave import update_database_schema
+update_database_schema()
+```
+
+### find_by_trace_id(trace_id)
+
+분산 트레이스의 모든 스팬을 조회합니다.
+
+```python
+from vectorwave import find_by_trace_id
+
+spans = find_by_trace_id("abc-123")
+# Returns: [{ function_name, span_id, duration_ms, status, ... }]
+```
+
+### search_functions(query, limit)
+
+저장된 함수 메타데이터에 대한 벡터 검색입니다.
+
+```python
+from vectorwave import search_functions
+
+results = search_functions(query="authentication", limit=5)
+```
+
+### search_executions(query, limit, filters)
+
+실행 로그에 대한 벡터 검색으로, 선택적 필터를 지원합니다.
+
+```python
+from vectorwave import search_executions
+
+results = search_executions(
+    query="timeout errors",
+    limit=10,
+    filters={"status": "error", "team": "backend"},
+)
+```
+
+### search_and_answer(query)
+
+코드베이스에 대한 RAG 기반 Q&A입니다.
+
+```python
+from vectorwave import search_and_answer
+
+answer = search_and_answer("How does the auth flow work?")
+```
+
+### analyze_trace_log(trace_id, question)
+
+자연어 질문으로 특정 트레이스를 분석합니다.
+
+```python
+from vectorwave import analyze_trace_log
+
+analysis = analyze_trace_log(
+    trace_id="abc-123",
+    question="Why was this trace slow?",
+)
+```
+
+## VectorWaveHealer
+
+### 생성자
+
+```python
+from vectorwave import VectorWaveHealer
+
+healer = VectorWaveHealer(
+    model="gpt-4-turbo",     # LLM 모델
+    temperature=0.1,          # 생성 temperature
+    max_tokens=2000,          # 최대 수정 코드 길이
+)
+```
+
+### diagnose_and_heal()
+
+```python
+result = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,      # 최근 N분 내 에러 검색
+    create_pr=True,           # 수정 사항으로 GitHub PR 생성
+)
+# Returns: { error_type, root_cause, fix_description, pr_url }
+```
+
+### batch_heal()
+
+```python
+results = healer.batch_heal(
+    lookback_minutes=120,
+    create_pr=True,
+    max_prs=5,
+)
+# Returns: [{ function_name, error_type, pr_url }]
+```
+
+## VectorWaveReplayer
+
+### 생성자
+
+```python
+from vectorwave import VectorWaveReplayer
+replayer = VectorWaveReplayer()
+```
+
+### replay()
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,                 # 리플레이할 최대 실행 수
+    golden_only=True,         # Golden Dataset 항목만
+    mode="semantic",          # "exact" 또는 "semantic"
+    threshold=0.85,           # 유사도 임계값 (시맨틱 모드)
+    update_baseline=False,    # 새 출력으로 Golden 업데이트
+)
+# Returns: { passed, failed, total, details: [...] }
+```
+
+## VectorWaveDatasetManager
+
+### 생성자
+
+```python
+from vectorwave import VectorWaveDatasetManager
+dm = VectorWaveDatasetManager()
+```
+
+### register_as_golden()
+
+```python
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="Verified by QA",
+    tags=["v2", "production"],
+)
+```
+
+### recommend_candidates()
+
+```python
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5,
+)
+```
+
+### get_golden_dataset()
+
+```python
+golden = dm.get_golden_dataset(function_name="generate_response")
+```
+
+## VectorWaveArchiver
+
+### 생성자
+
+```python
+from vectorwave import VectorWaveArchiver
+archiver = VectorWaveArchiver()
+```
+
+### export()
+
+```python
+archiver.export(
+    output_path="data/executions.jsonl",
+    function_name="generate_response",
+    date_range=("2025-01-01", "2025-03-31"),
+    golden_only=False,
+)
+```
+
+### archive_and_cleanup()
+
+```python
+archiver.archive_and_cleanup(
+    older_than_days=90,
+    export_path="archive/2025-q1.jsonl",
+    keep_golden=True,
+)
+```
+
+## VectorWaveAutoInjector
+
+### 생성자
+
+```python
+from vectorwave import VectorWaveAutoInjector
+injector = VectorWaveAutoInjector()
+```
+
+### inject()
+
+```python
+injector.inject(
+    module="app.services.ai",
+    include=["func_a", "func_b"],   # 선택적 화이트리스트
+    exclude=["_private"],            # 선택적 블랙리스트
+    options={"auto": True, "team": "ai"},
+)
+```
+
+## configure_alerts()
+
+```python
+from vectorwave import configure_alerts
+
+configure_alerts(
+    webhook_url="https://discord.com/api/webhooks/...",
+    drift_threshold=0.25,
+    events=["error", "drift", "healing"],
+    format="discord",        # "discord", "slack", 또는 "json"
+    headers=None,            # JSON 형식용 커스텀 헤더
+)
+```

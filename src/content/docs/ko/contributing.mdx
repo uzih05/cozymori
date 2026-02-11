@@ -1,0 +1,171 @@
+---
+title: "기여 가이드"
+description: "cozymori 프로젝트에 기여하는 방법 — 커밋 컨벤션, 이슈, PR."
+order: 32
+category: 생태계
+---
+
+## 시작하기
+
+모든 cozymori 프로젝트는 오픈소스이며 기여를 환영합니다. 참여하는 방법은 다음과 같습니다:
+
+1. GitHub에서 리포지토리를 Fork
+2. `main`에서 기능 브랜치를 생성
+3. 변경 사항을 작성
+4. Pull Request를 제출
+
+## 리포지토리
+
+| 프로젝트 | 리포지토리 | 언어 |
+|---|---|---|
+| VectorWave | [Cozymori/VectorWave](https://github.com/Cozymori/VectorWave) | Python + Rust |
+| VectorSurfer | [Cozymori/VectorSurfer](https://github.com/Cozymori/VectorSurfer) | TypeScript + Python |
+| VectorSurferSTL | [Cozymori/VectorSurferSTL](https://github.com/Cozymori/VectorSurferSTL) | Python |
+| VectorCheck | [Cozymori/VectorCheck](https://github.com/Cozymori/VectorCheck) | Python |
+
+## 커밋 메시지 컨벤션
+
+모든 cozymori 프로젝트는 구조화된 커밋 메시지 형식을 따릅니다:
+
+### 형식
+
+```
+<type>(<scope>): <subject>
+```
+
+### 타입
+
+| 타입 | 설명 | 예시 |
+|---|---|---|
+| `feat` | 새 기능 | `feat(cache): add multi-tenant cache scope` |
+| `fix` | 버그 수정 | `fix(healer): handle empty stack traces` |
+| `docs` | 문서 | `docs(readme): update installation guide` |
+| `style` | 코드 스타일 (로직 변경 없음) | `style(core): fix indentation in vectorize.py` |
+| `refactor` | 코드 리팩토링 | `refactor(tracing): simplify span context manager` |
+| `test` | 테스트 추가 또는 업데이트 | `test(cache): add semantic threshold edge cases` |
+| `chore` | 빌드, CI, 의존성 | `chore(deps): bump weaviate-client to 4.8.0` |
+| `perf` | 성능 개선 | `perf(batch): optimize Rust batch writer throughput` |
+| `ci` | CI/CD 변경 | `ci(actions): add Python 3.13 to test matrix` |
+| `build` | 빌드 시스템 변경 | `build(pyproject): update package metadata` |
+| `revert` | 이전 커밋 되돌리기 | `revert: revert "feat(cache): add scope"` |
+
+### 주요 스코프
+
+| 스코프 | 영역 |
+|---|---|
+| `auth` | 인증 / 인가 |
+| `api` | API 엔드포인트 |
+| `ui` | 사용자 인터페이스 |
+| `database` | 데이터베이스 / Weaviate |
+| `config` | 설정 |
+| `deps` | 의존성 |
+| `security` | 보안 |
+| `i18n` | 국제화 |
+| `cache` | 캐싱 |
+| `healer` | 자동 치유 |
+| `tracing` | 분산 트레이싱 |
+| `drift` | 드리프트 감지 |
+| `replay` | 리플레이 테스트 |
+
+### 모범 사례
+
+- **명령형**을 사용: "add feature" (O), "added feature" (X)
+- 제목줄은 **50자 이내**로 유지
+- 제목의 첫 글자는 **대문자**로
+- 제목줄에 **마침표 없이**
+- 본문에는 "무엇"이 아닌 "왜"를 작성
+
+### 예시
+
+```bash
+# 간단한 기능
+feat(cache): add cache scope isolation
+
+# 컨텍스트가 포함된 버그 수정
+fix(healer): prevent duplicate PRs for same error
+
+The cooldown mechanism was not checking the error hash,
+causing multiple PRs for identical errors within the
+cooldown window.
+
+Closes #42
+
+# 호환성을 깨는 변경
+feat(api)!: change vectorize return type to Result
+
+BREAKING CHANGE: @vectorize now returns a Result object
+instead of the raw return value. Use result.value to
+access the original return value.
+
+# 이슈 참조가 포함된 다중 라인
+docs(guide): add semantic caching scope documentation
+
+Added documentation for the new semantic_cache_scope
+parameter, including multi-tenant examples.
+
+Refs #38
+```
+
+## 이슈 템플릿
+
+### 버그 리포트
+
+버그 리포트를 작성할 때 포함할 항목:
+
+- VectorWave / VectorSurfer 버전
+- Python 버전
+- Weaviate 버전
+- 재현 단계
+- 예상 동작 vs 실제 동작
+- 에러 로그 / 스택 트레이스
+
+### 기능 요청
+
+기능을 요청할 때 포함할 항목:
+
+- 문제 설명 -- 무엇을 하려는지
+- 제안하는 해결 방법 -- 어떻게 동작하길 원하는지
+- 고려한 대안
+- 사용 사례 컨텍스트
+
+## 개발 환경 설정
+
+### VectorWave
+
+```bash
+git clone https://github.com/Cozymori/VectorWave
+cd VectorWave
+pip install -e ".[dev]"  # 개발 의존성과 함께 편집 가능 모드 설치
+pytest                    # 테스트 실행
+```
+
+### VectorSurfer
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer
+npm install               # 프론트엔드
+cd backend && pip install -r requirements.txt  # 백엔드
+npm run dev               # 양쪽 모두 실행
+```
+
+## 라이선스
+
+모든 cozymori 프로젝트는 **MIT 라이선스**로 제공됩니다.
+
+```
+Copyright (c) 2025 Jun Yeong Kim
+```
+
+### 서드파티 컴포넌트
+
+| 컴포넌트 | 라이선스 |
+|---|---|
+| Weaviate Client | Apache License 2.0 |
+| Pydantic | MIT License |
+
+## 다음 단계
+
+- [VectorWave 개요](/docs/vectorwave-overview) -- 코어 SDK 문서
+- [VectorSurfer 개요](/docs/vectorsurf-overview) -- 대시보드 문서
+- [빠른 시작](/docs/quickstart) -- 5분 안에 시작하기

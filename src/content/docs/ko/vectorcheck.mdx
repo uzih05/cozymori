@@ -1,0 +1,181 @@
+---
+title: "VectorCheck"
+description: "AI/LLM 애플리케이션을 위한 CLI 회귀 테스트 프레임워크."
+order: 30
+category: 생태계
+---
+
+## VectorCheck란?
+
+**VectorCheck**는 AI/LLM 애플리케이션을 위한 CLI 회귀 테스트 프레임워크입니다. 기존의 `assert a == b`는 생성형 AI에 적합하지 않습니다 -- 동일한 프롬프트가 서로 다른 유효한 출력을 생성할 수 있기 때문입니다. VectorCheck는 **벡터 유사도**와 **LLM 심사 평가**로 이 문제를 해결합니다.
+
+```bash
+pip install vectorcheck
+```
+
+## 왜 VectorCheck인가?
+
+| 접근 방식 | 동작 원리 | 한계 |
+|---|---|---|
+| `assert a == b` | 정확한 문자열 매칭 | AI 출력에 부적합 -- 같은 의미, 다른 표현 |
+| VectorCheck **정확** | 문자 단위 비교 | 결정적 함수에만 적합 |
+| VectorCheck **시맨틱** | 임베딩 코사인 유사도 | 의역과 변형을 처리 |
+| VectorCheck **LLM 심사** | GPT-4가 동등성 평가 | 가장 유연, 복잡한 출력 처리 |
+
+## CLI 명령어
+
+### 테스트 실행
+
+```bash
+# 모든 추적된 함수 테스트
+vw test --target all
+
+# 특정 함수 테스트
+vw test --target app.generate_response
+
+# 시맨틱 비교 모드
+vw test --target all --semantic --threshold 0.85
+
+# LLM 심사 모드
+vw test --target all --judge --model gpt-4-turbo
+```
+
+### 데이터 내보내기
+
+```bash
+# 실행 로그를 JSONL로 내보내기
+vw export --target app.generate_response --output data.jsonl
+
+# 필터와 함께 내보내기
+vw export --target all --status success --output successes.jsonl
+
+# Golden Dataset만 내보내기
+vw export --target all --golden --output golden.jsonl
+```
+
+### 함수 검사
+
+```bash
+# 모든 추적된 함수 목록
+vw list
+
+# 특정 함수의 상세 정보
+vw inspect app.generate_response
+
+# 최근 실행 이력
+vw history app.generate_response --limit 20
+```
+
+## 테스트 모드
+
+### 정확 일치
+
+출력을 문자 단위로 비교합니다. 결정적 함수에 적합합니다.
+
+```bash
+vw test --target app.calculate_total --exact
+```
+
+통과 기준: 출력이 동일해야 합니다.
+
+### 시맨틱 비교
+
+임베딩 코사인 유사도로 출력을 비교합니다. AI/NLP 출력에 적합합니다.
+
+```bash
+vw test --target app.generate_response --semantic --threshold 0.85
+```
+
+| 임계값 | 엄격도 | 사용 사례 |
+|---|---|---|
+| `0.95` | 매우 엄격 | 사실 기반 Q&A, 요약 |
+| `0.85` | 권장 | 일반 LLM 출력 |
+| `0.75` | 관대 | 창의적 글쓰기, 개방형 질문 |
+
+### LLM 심사
+
+GPT-4를 사용하여 두 출력의 시맨틱 동등성을 평가합니다.
+
+```bash
+vw test --target app.generate_response --judge --model gpt-4-turbo
+```
+
+LLM 심사가 고려하는 항목:
+- 시맨틱 의미
+- 사실적 정확성
+- 완전성
+- 톤과 스타일 (설정 가능)
+
+## CI/CD 통합
+
+### GitHub Actions
+
+```yaml
+name: AI Regression Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      weaviate:
+        image: semitechnologies/weaviate:1.26.1
+        ports:
+          - 8080:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install vectorwave vectorcheck
+      - run: vw test --target all --semantic --threshold 0.85
+```
+
+### 종료 코드
+
+| 코드 | 의미 |
+|---|---|
+| `0` | 모든 테스트 통과 |
+| `1` | 하나 이상의 테스트 실패 |
+| `2` | 설정 오류 |
+
+## 설정 파일
+
+프로젝트 루트에 `vectorcheck.yml`을 생성하여 영구적인 설정을 관리합니다:
+
+```yaml
+# vectorcheck.yml
+default_mode: semantic
+default_threshold: 0.85
+targets:
+  - name: app.generate_response
+    mode: semantic
+    threshold: 0.90
+  - name: app.calculate_total
+    mode: exact
+  - name: app.creative_writer
+    mode: judge
+    model: gpt-4-turbo
+```
+
+그런 다음 다음과 같이 실행합니다:
+
+```bash
+vw test  # vectorcheck.yml의 설정 사용
+```
+
+## VectorWave와의 관계
+
+VectorCheck는 VectorWave와 동일한 Weaviate 인스턴스에서 데이터를 읽습니다:
+
+```
+Your App + @vectorize → Weaviate ← VectorCheck CLI
+```
+
+`@vectorize(replay=True)` 데코레이터가 저장한 입출력을 VectorCheck가 테스트 케이스로 활용합니다. [Golden Dataset](/docs/vectorwave-drift)은 검증된 베이스라인을 제공합니다.
+
+## 다음 단계
+
+- [VectorWave 리플레이 테스트](/docs/vectorwave-testing) -- 프로그래밍 방식 리플레이 API
+- [VectorSurfer 리플레이 UI](/docs/vectorsurf-features) -- 시각적 테스트 인터페이스
+- [기여 가이드](/docs/contributing) -- 기여하는 방법
