@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "title": "cozymori — AI Observability Framework",
+    "description": "Simpler, Easier, For Developers. VectorWave and VectorSurfer — observability, caching, and self-healing for AI functions."
+  },
+  "hero": {
+    "tagline": "Simpler, Easier, For Developers."
+  },
+  "intro": {
+    "headline": "Observe. Cache. Heal.",
+    "sub": "Vectorize and trace every function call. Cache similar requests instantly. When errors occur, AI diagnoses them and opens a fix PR — automatically."
+  },
+  "projects": {
+    "vectorwave": {
+      "badge": "VectorWave",
+      "title": "Python vectorizing framework",
+      "description": "One decorator to vectorize and trace your functions. Semantic caching, self-healing, drift detection — an AI observability framework powered by Weaviate.",
+      "cta": "Learn more"
+    },
+    "vectorsurf": {
+      "badge": "VectorSurfer",
+      "title": "AI observability dashboard",
+      "description": "Execution timelines, distributed traces, and AI-powered error diagnosis in one dashboard. Monitor all your VectorWave data in real-time.",
+      "cta": "Learn more"
+    }
+  },
+  "philosophy": {
+    "title": "What we believe",
+    "simpleTitle": "Simplicity first",
+    "simpleBody": "No complex setup — one decorator is all you need. Every API is designed to work right out of the box.",
+    "openTitle": "Open by default",
+    "openBody": "All our work is open-source. The best tools emerge when ideas flow freely and communities build together.",
+    "devTitle": "For developers",
+    "devBody": "We obsess over developer experience. Focus on what you're building — we'll handle the rest."
+  },
+  "ecosystem": {
+    "title": "One ecosystem",
+    "sub": "From decorator to dashboard to testing. Everything connects.",
+    "step1": "Decorate",
+    "step1sub": "Start tracing with @vectorize",
+    "step2": "Monitor",
+    "step2sub": "Real-time observability dashboard",
+    "step3": "Heal",
+    "step3sub": "AI diagnoses and fixes errors",
+    "vectorcheck": "VectorCheck",
+    "vectorcheckDesc": "CLI regression testing for AI functions. Compare outputs with vector similarity and LLM judges.",
+    "vectorsurferstl": "VectorSurferSTL",
+    "vectorsurferstlDesc": "Lightweight Streamlit dashboard. Start monitoring with just Python — no setup required."
+  },
+  "trust": {
+    "license": "MIT License",
+    "python": "Python 3.10 — 3.13",
+    "version": "v0.2.9",
+    "opensource": "Open Source"
+  },
+  "cta": {
+    "title": "Let's build together.",
+    "description": "All our projects are open-source. Read the docs or start contributing on GitHub.",
+    "docs": "Documentation",
+    "github": "GitHub"
+  },
+  "vectorwave": {
+    "badge": "VectorWave",
+    "heroTitle1": "Vectorizing",
+    "heroTitle2": "framework for AI",
+    "heroDescription": "A decorator-based Python framework. Vectorize function calls, store them in Weaviate, and get semantic caching, self-healing, and drift detection.",
+    "getStarted": "Get Started",
+    "sourceCode": "Source Code",
+    "apiTitle": "One decorator is all you need",
+    "apiDescription": "Trace and cache your functions with a single decorator. Supports both sync and async.",
+    "featuresTitle": "Features",
+    "featuresDescription": "Everything you need for AI function observability.",
+    "feature1Title": "Semantic Caching",
+    "feature1Description": "Similar inputs are detected via vector similarity and return cached results instantly. Drastically cut LLM costs and latency.",
+    "feature2Title": "Self-Healing",
+    "feature2Description": "When errors occur, AI analyzes logs and source code, generates a fix, and opens a GitHub PR automatically.",
+    "feature3Title": "Rust Batch Engine",
+    "feature3Description": "PyO3-based Rust native extension handles batch writes and sensitive data masking asynchronously.",
+    "feature4Title": "Distributed Tracing",
+    "feature4Description": "trace_id and span_id based distributed tracing. Track function call chains hierarchically.",
+    "feature5Title": "Drift Detection",
+    "feature5Description": "Monitor input vector distance from Golden Dataset centroid. Instant webhook alerts on anomalies.",
+    "feature6Title": "RAG Search",
+    "feature6Description": "Natural language Q&A over stored code and trace logs. Explore your codebase with AI.",
+    "ctaTitle": "Start the wave",
+    "ctaDescription": "pip install vectorwave and start AI function observability in minutes."
+  },
+  "vectorsurf": {
+    "badge": "VectorSurfer",
+    "heroTitle1": "AI Observability",
+    "heroTitle2": "Dashboard",
+    "heroDescription": "A full-stack dashboard for monitoring all your VectorWave data in real-time. Built with Next.js and FastAPI.",
+    "getStarted": "Get Started",
+    "sourceCode": "Source Code",
+    "demoTitle": "AI observability at a glance",
+    "demoDescription": "View KPIs, timelines, and error distributions on a single Bento grid layout.",
+    "demoPlaceholder": "Interactive Demo — Coming Soon",
+    "codeTitle": "AI diagnoses your errors",
+    "codeDescription": "Feed error logs and source code to GPT-4 for automatic diagnosis and fix generation.",
+    "featuresTitle": "Features",
+    "featuresDescription": "Everything you need for AI observability in one dashboard.",
+    "feature1Title": "Bento Grid Dashboard",
+    "feature1Description": "Drag-and-drop responsive dashboard with widgets. KPIs, timelines, and error distributions at a glance.",
+    "feature2Title": "Trace Waterfall",
+    "feature2Description": "Visualize distributed traces as a waterfall. Spot bottlenecks and errors in function call chains instantly.",
+    "feature3Title": "AI Healer",
+    "feature3Description": "GPT-4 powered error diagnosis. Analyze errors individually or in batch and get suggested code fixes.",
+    "feature4Title": "Replay Testing",
+    "feature4Description": "Replay past successful executions for regression testing. Supports exact match and semantic comparison modes.",
+    "feature5Title": "Semantic Search",
+    "feature5Description": "Search functions, execution logs, and errors with natural language. Hybrid search and RAG Q&A supported.",
+    "feature6Title": "Multi-Language",
+    "feature6Description": "English, Japanese, and Korean UI out of the box. A multilingual dashboard for global teams.",
+    "ctaTitle": "Launch the dashboard",
+    "ctaDescription": "Monitor everything about your AI functions with VectorSurfer."
+  },
+  "nav": {
+    "home": "Home",
+    "vectorwave": "VectorWave",
+    "vectorsurf": "VectorSurfer",
+    "docs": "Docs",
+    "github": "GitHub"
+  },
+  "footer": {
+    "description": "Simpler, Easier, For Developers. Open-source frameworks for AI observability.",
+    "products": "Products",
+    "company": "Company",
+    "resources": "Resources",
+    "about": "About",
+    "documentation": "Documentation",
+    "copyright": "cozymori. All rights reserved.",
+    "madeWith": "Built with simplicity."
+  },
+  "docs": {
+    "badge": "Documentation",
+    "title": "Getting Started",
+    "description": "Welcome to the cozymori documentation. Learn how to use VectorWave and VectorSurfer in your projects.",
+    "overview": "Overview",
+    "emptyMessage": "Documentation pages will appear here. Check back soon!"
+  }
+}

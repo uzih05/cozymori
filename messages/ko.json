@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "title": "cozymori — AI 관측 프레임워크",
+    "description": "Simpler, Easier, For Developers. VectorWave와 VectorSurfer — 간편한 AI 관측·캐싱·자동 치유 프레임워크."
+  },
+  "hero": {
+    "tagline": "Simpler, Easier, For Developers."
+  },
+  "intro": {
+    "headline": "관측하고, 캐싱하고, 치유합니다.",
+    "sub": "함수 호출을 벡터화하여 추적하고, 유사한 요청은 즉시 캐싱합니다.\n에러 발생 시 AI가 자동으로 진단하고 수정 PR을 열어줍니다."
+  },
+  "projects": {
+    "vectorwave": {
+      "badge": "VectorWave",
+      "title": "Python 벡터화 프레임워크",
+      "description": "데코레이터 하나로 함수를 벡터화하고 추적합니다. 시맨틱 캐싱, 자동 치유, 드리프트 감지 — Weaviate 기반의 AI 관측 프레임워크.",
+      "cta": "자세히 보기"
+    },
+    "vectorsurf": {
+      "badge": "VectorSurfer",
+      "title": "AI 관측 대시보드",
+      "description": "실행 타임라인, 분산 트레이스, AI 에러 진단을 하나의 대시보드에서. VectorWave의 모든 데이터를 실시간으로 모니터링합니다.",
+      "cta": "자세히 보기"
+    }
+  },
+  "philosophy": {
+    "title": "우리가 믿는 것",
+    "simpleTitle": "간결함 우선",
+    "simpleBody": "복잡한 설정 없이, 데코레이터 하나면 됩니다. 처음부터 바로 쓸 수 있도록 모든 API를 설계합니다.",
+    "openTitle": "기본은 오픈",
+    "openBody": "모든 작업은 오픈소스입니다. 아이디어가 자유롭게 흐르고 커뮤니티가 함께 만들어갈 때 최고의 도구가 탄생합니다.",
+    "devTitle": "개발자를 위한",
+    "devBody": "개발자 경험에 집착합니다. 여러분은 만드는 것에 집중하세요. 나머지는 우리가 할게요."
+  },
+  "ecosystem": {
+    "title": "하나의 생태계",
+    "sub": "데코레이터부터 대시보드, 테스트까지. 모든 도구가 연결됩니다.",
+    "step1": "Decorate",
+    "step1sub": "@vectorize 하나로 추적 시작",
+    "step2": "Monitor",
+    "step2sub": "대시보드에서 실시간 관측",
+    "step3": "Heal",
+    "step3sub": "AI가 에러를 진단하고 수정",
+    "vectorcheck": "VectorCheck",
+    "vectorcheckDesc": "AI 함수를 위한 CLI 회귀 테스트. 벡터 유사도와 LLM 심판으로 출력을 비교합니다.",
+    "vectorsurferstl": "VectorSurferSTL",
+    "vectorsurferstlDesc": "경량 Streamlit 대시보드. 설치 없이 Python만으로 모니터링을 시작하세요."
+  },
+  "trust": {
+    "license": "MIT License",
+    "python": "Python 3.10 — 3.13",
+    "version": "v0.2.9",
+    "opensource": "Open Source"
+  },
+  "cta": {
+    "title": "함께 만들어 가요.",
+    "description": "모든 프로젝트는 오픈소스입니다. 문서를 읽거나 GitHub에서 바로 기여할 수 있어요.",
+    "docs": "Documentation",
+    "github": "GitHub"
+  },
+  "vectorwave": {
+    "badge": "VectorWave",
+    "heroTitle1": "Vectorizing",
+    "heroTitle2": "framework for AI",
+    "heroDescription": "데코레이터 기반 Python 프레임워크. 함수 호출을 벡터화하여 Weaviate에 저장하고, 시맨틱 캐싱·자동 치유·드리프트 감지를 제공합니다.",
+    "getStarted": "시작하기",
+    "sourceCode": "소스 코드",
+    "apiTitle": "@vectorize 하나면 충분합니다",
+    "apiDescription": "데코레이터 하나로 함수를 추적하고 캐싱합니다. 동기·비동기 함수 모두 지원.",
+    "featuresTitle": "기능",
+    "featuresDescription": "AI 함수 관측에 필요한 모든 것.",
+    "feature1Title": "Semantic Caching",
+    "feature1Description": "유사한 입력은 벡터 유사도로 판별하여 즉시 캐시된 결과를 반환합니다. LLM 호출 비용과 지연시간을 대폭 절감.",
+    "feature2Title": "Self-Healing",
+    "feature2Description": "에러 발생 시 AI가 로그와 소스 코드를 분석하여 수정 코드를 생성하고, GitHub PR까지 자동으로 엽니다.",
+    "feature3Title": "Rust Batch Engine",
+    "feature3Description": "PyO3 기반 Rust 네이티브 확장으로 배치 쓰기와 민감 데이터 마스킹을 비동기로 처리합니다.",
+    "feature4Title": "Distributed Tracing",
+    "feature4Description": "trace_id, span_id 기반의 분산 트레이싱. 함수 호출 체인을 계층적으로 추적합니다.",
+    "feature5Title": "Drift Detection",
+    "feature5Description": "Golden Dataset 중심점 대비 입력 벡터의 거리를 모니터링. 이상 탐지 시 웹훅으로 즉시 알림.",
+    "feature6Title": "RAG Search",
+    "feature6Description": "저장된 코드와 트레이스 로그를 기반으로 자연어 질의응답. 코드베이스를 AI로 탐색합니다.",
+    "ctaTitle": "wave를 시작하세요",
+    "ctaDescription": "pip install vectorwave로 몇 분 안에 AI 함수 관측을 시작하세요."
+  },
+  "vectorsurf": {
+    "badge": "VectorSurfer",
+    "heroTitle1": "AI Observability",
+    "heroTitle2": "Dashboard",
+    "heroDescription": "VectorWave의 모든 데이터를 실시간으로 모니터링하는 풀스택 대시보드. Next.js + FastAPI 기반.",
+    "getStarted": "시작하기",
+    "sourceCode": "소스 코드",
+    "demoTitle": "한눈에 보는 AI 관측",
+    "demoDescription": "Bento 그리드 레이아웃으로 KPI, 타임라인, 에러 분포를 한 화면에서 확인하세요.",
+    "demoPlaceholder": "Interactive Demo — Coming Soon",
+    "codeTitle": "AI가 진단합니다",
+    "codeDescription": "에러 로그와 소스 코드를 GPT-4에 전달하여 자동 진단과 수정 코드를 생성합니다.",
+    "featuresTitle": "기능",
+    "featuresDescription": "AI 관측에 필요한 모든 것을 하나의 대시보드에서.",
+    "feature1Title": "Bento Grid Dashboard",
+    "feature1Description": "드래그 앤 드롭으로 위젯을 배치하는 반응형 대시보드. KPI, 타임라인, 에러 분포를 한눈에.",
+    "feature2Title": "Trace Waterfall",
+    "feature2Description": "분산 트레이스를 워터폴 뷰로 시각화. 함수 호출 체인의 병목과 에러를 즉시 파악합니다.",
+    "feature3Title": "AI Healer",
+    "feature3Description": "GPT-4 기반 에러 자동 진단. 단건 또는 배치로 에러를 분석하고 수정 코드를 제안합니다.",
+    "feature4Title": "Replay Testing",
+    "feature4Description": "과거 성공 실행을 재생하여 회귀 테스트. 정확 일치와 시맨틱 비교 모드를 지원합니다.",
+    "feature5Title": "Semantic Search",
+    "feature5Description": "함수, 실행 로그, 에러를 자연어로 검색. 하이브리드 검색과 RAG 질의응답을 지원합니다.",
+    "feature6Title": "Multi-Language",
+    "feature6Description": "영어, 일본어, 한국어 UI를 기본 제공. 글로벌 팀을 위한 다국어 대시보드.",
+    "ctaTitle": "대시보드를 시작하세요",
+    "ctaDescription": "VectorSurfer로 AI 함수의 모든 것을 모니터링하세요."
+  },
+  "nav": {
+    "home": "Home",
+    "vectorwave": "VectorWave",
+    "vectorsurf": "VectorSurfer",
+    "docs": "Docs",
+    "github": "GitHub"
+  },
+  "footer": {
+    "description": "Simpler, Easier, For Developers. AI 관측을 위한 오픈소스 프레임워크.",
+    "products": "제품",
+    "company": "조직",
+    "resources": "리소스",
+    "about": "소개",
+    "documentation": "문서",
+    "copyright": "cozymori. All rights reserved.",
+    "madeWith": "Built with simplicity."
+  },
+  "docs": {
+    "badge": "Documentation",
+    "title": "시작하기",
+    "description": "cozymori 문서에 오신 것을 환영합니다. VectorWave와 VectorSurfer를 프로젝트에서 사용하는 방법을 알아보세요.",
+    "overview": "Overview",
+    "emptyMessage": "문서 페이지가 곧 여기에 나타납니다. 조금만 기다려주세요!"
+  }
+}
