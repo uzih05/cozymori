@@ -145,7 +145,7 @@ export default function VectorSurferPage() {
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1"
         >
           <span className="text-[10px] uppercase tracking-widest text-text-tertiary">Scroll</span>
-          <ChevronDown size={16} className="text-text-tertiary animate-float" />
+          <ChevronDown size={16} className="text-text-tertiary animate-bounce-down" />
         </motion.div>
       </section>
 
