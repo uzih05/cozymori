@@ -1,0 +1,176 @@
+---
+title: Drift Detection
+description: Monitor when user inputs drift away from known-good patterns with Semantic Drift Radar.
+order: 15
+category: VectorWave
+---
+
+## What is Semantic Drift?
+
+Over time, the inputs your AI functions receive may change — new topics, different phrasing patterns, or entirely new use cases. **Semantic Drift** occurs when new inputs move far from your validated "Golden Dataset."
+
+This matters because:
+
+- Cached results may become irrelevant
+- Model performance may degrade on unfamiliar inputs
+- Errors may increase for edge cases you haven't tested
+
+VectorWave's **Drift Radar** monitors this in real-time.
+
+## How Drift Detection Works
+
+```
+New Input → Embedding → Distance from Golden Centroid
+                              │
+                    ┌─────────┴──────────┐
+                    │                     │
+              Distance < 0.25       Distance ≥ 0.25
+              (Within bounds)       (DRIFT DETECTED)
+                    │                     │
+                    ▼                     ▼
+              Normal execution      Webhook Alert
+                                   (Discord/Slack)
+```
+
+1. VectorWave maintains a **centroid** (average vector) of all Golden Dataset entries for each function
+2. When a new input arrives, it calculates the **cosine distance** from the centroid
+3. If the distance exceeds the threshold (default: 0.25), a drift alert is triggered
+
+## Golden Dataset Management
+
+The Golden Dataset is your collection of verified, high-quality executions. These serve as the baseline for drift detection.
+
+### Promoting Executions to Golden
+
+```python
+from vectorwave import VectorWaveDatasetManager
+
+dm = VectorWaveDatasetManager()
+
+# Promote a verified execution to Golden status
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="Verified by QA team",
+    tags=["v2", "production"],
+)
+```
+
+### Auto-Recommending Golden Candidates
+
+VectorWave can suggest executions that are good candidates for Golden status:
+
+```python
+# Get recommendations based on success rate and diversity
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5,
+)
+
+for candidate in candidates:
+    print(f"UUID: {candidate['uuid']}")
+    print(f"Input: {candidate['input_preview']}")
+    print(f"Confidence: {candidate['confidence_score']}")
+    print("---")
+```
+
+### Listing Golden Entries
+
+```python
+# Get all Golden entries for a function
+golden = dm.get_golden_dataset(
+    function_name="generate_response",
+)
+
+print(f"Golden dataset size: {len(golden)}")
+```
+
+## Webhook Alerts
+
+When drift is detected, VectorWave sends a real-time alert via webhook.
+
+### Discord Integration
+
+```python
+from vectorwave import configure_alerts
+
+configure_alerts(
+    webhook_url="https://discord.com/api/webhooks/...",
+    drift_threshold=0.25,  # Default
+)
+```
+
+The Discord embed includes:
+
+- Function name and module path
+- Error code (if applicable)
+- Trace ID for debugging
+- Captured attributes (inputs, tags)
+- Full stack trace (for error-triggered drifts)
+- Distance value from Golden centroid
+
+### Custom Webhook
+
+```python
+configure_alerts(
+    webhook_url="https://your-api.com/alerts",
+    drift_threshold=0.30,
+    format="json",  # Raw JSON payload instead of Discord embed
+)
+```
+
+### Alert Payload
+
+```json
+{
+  "type": "drift_detected",
+  "function_name": "generate_response",
+  "module_path": "app.ai.generator",
+  "distance": 0.34,
+  "threshold": 0.25,
+  "input_preview": "How do I mine bitcoin...",
+  "trace_id": "abc-123",
+  "timestamp": "2025-01-15T10:30:00Z"
+}
+```
+
+## Threshold Tuning
+
+| Threshold | Sensitivity | Use Case |
+|---|---|---|
+| `0.15` | Very sensitive | Safety-critical applications |
+| `0.25` | Default | General production monitoring |
+| `0.35` | Lenient | Exploratory / creative applications |
+| `0.50` | Very lenient | Wide-scope functions |
+
+### Per-Function Thresholds
+
+```python
+@vectorize(
+    auto=True,
+    drift_threshold=0.20,  # Stricter than default
+)
+def safety_critical_function(query: str):
+    ...
+
+@vectorize(
+    auto=True,
+    drift_threshold=0.40,  # More lenient
+)
+def creative_function(query: str):
+    ...
+```
+
+## Monitoring in VectorSurfer
+
+[VectorSurfer](/docs/vectorsurf-overview) provides a visual dashboard for drift monitoring:
+
+- Real-time drift distance charts per function
+- Golden Dataset management UI
+- Alert history and trends
+- Centroid visualization
+
+## Next Steps
+
+- [Replay Testing](/docs/vectorwave-testing) — Test against Golden Dataset
+- [Advanced Configuration](/docs/vectorwave-advanced) — Webhooks, tagging, archiving
+- [VectorSurfer Dashboard](/docs/vectorsurf-features) — Visual monitoring

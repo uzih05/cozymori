@@ -1,0 +1,300 @@
+---
+title: API Reference
+description: Complete reference for @vectorize options, environment variables, and utility classes.
+order: 19
+category: VectorWave
+---
+
+## @vectorize Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `semantic_cache` | `bool` | `False` | Enable semantic caching for similar inputs |
+| `cache_threshold` | `float` | `0.9` | Cosine similarity threshold for cache hits (0.0 — 1.0) |
+| `semantic_cache_scope` | `str` | `None` | Cache isolation scope (project/user level multi-tenancy) |
+| `capture_return_value` | `bool` | `False` | Store function return values in Weaviate |
+| `capture_inputs` | `bool` | `False` | Auto-capture all function parameters |
+| `replay` | `bool` | `False` | Enable replay-based regression testing |
+| `auto` | `bool` | `False` | Auto-generate function descriptions via LLM |
+| `search_description` | `str` | `None` | Custom description for vector search optimization |
+| `team` | `str` | `None` | Team tag for filtering and access control |
+| `tags` | `dict` | `None` | Key-value metadata tags for execution tagging |
+| `drift_threshold` | `float` | `0.25` | Semantic drift detection threshold |
+
+### Usage
+
+```python
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,
+    capture_inputs=True,
+    replay=True,
+    auto=True,
+    team="ml-team",
+    tags={"env": "production"},
+    drift_threshold=0.20,
+)
+async def generate_response(query: str):
+    return await llm.complete(query)
+```
+
+## @trace_span
+
+Decorator for child span tracing. Must be used within a `@vectorize` parent context.
+
+```python
+from vectorwave import trace_span
+
+@trace_span
+def child_function(data):
+    return process(data)
+```
+
+No parameters — automatically inherits `trace_id` from the parent `@vectorize` call.
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `OPENAI_API_KEY` | For AI features | — | OpenAI API key for embeddings, auto-docs, healing, RAG |
+| `WEAVIATE_URL` | No | `http://localhost:8080` | Weaviate database URL |
+| `VECTORWAVE_VECTORIZER` | No | `huggingface` | Embedding provider: `huggingface` or `openai_client` |
+| `GITHUB_TOKEN` | For auto-PR | — | GitHub personal access token |
+| `GITHUB_REPO` | For auto-PR | — | GitHub repository (format: `org/repo`) |
+| `VECTORWAVE_TAGS_*` | No | — | Global tags (e.g., `VECTORWAVE_TAGS_ENV=production`) |
+
+## Core Functions
+
+### initialize_database()
+
+Creates Weaviate collections. Must be called once before first use.
+
+```python
+from vectorwave import initialize_database
+initialize_database()
+```
+
+### update_database_schema()
+
+Performs zero-downtime schema migration when upgrading VectorWave.
+
+```python
+from vectorwave import update_database_schema
+update_database_schema()
+```
+
+### find_by_trace_id(trace_id)
+
+Retrieves all spans for a distributed trace.
+
+```python
+from vectorwave import find_by_trace_id
+
+spans = find_by_trace_id("abc-123")
+# Returns: [{ function_name, span_id, duration_ms, status, ... }]
+```
+
+### search_functions(query, limit)
+
+Vector search over stored function metadata.
+
+```python
+from vectorwave import search_functions
+
+results = search_functions(query="authentication", limit=5)
+```
+
+### search_executions(query, limit, filters)
+
+Vector search over execution logs with optional filters.
+
+```python
+from vectorwave import search_executions
+
+results = search_executions(
+    query="timeout errors",
+    limit=10,
+    filters={"status": "error", "team": "backend"},
+)
+```
+
+### search_and_answer(query)
+
+RAG-powered Q&A over your codebase.
+
+```python
+from vectorwave import search_and_answer
+
+answer = search_and_answer("How does the auth flow work?")
+```
+
+### analyze_trace_log(trace_id, question)
+
+Analyze a specific trace with a natural language question.
+
+```python
+from vectorwave import analyze_trace_log
+
+analysis = analyze_trace_log(
+    trace_id="abc-123",
+    question="Why was this trace slow?",
+)
+```
+
+## VectorWaveHealer
+
+### Constructor
+
+```python
+from vectorwave import VectorWaveHealer
+
+healer = VectorWaveHealer(
+    model="gpt-4-turbo",     # LLM model
+    temperature=0.1,          # Generation temperature
+    max_tokens=2000,          # Max fix length
+)
+```
+
+### diagnose_and_heal()
+
+```python
+result = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,      # Search errors in last N minutes
+    create_pr=True,           # Create GitHub PR with fix
+)
+# Returns: { error_type, root_cause, fix_description, pr_url }
+```
+
+### batch_heal()
+
+```python
+results = healer.batch_heal(
+    lookback_minutes=120,
+    create_pr=True,
+    max_prs=5,
+)
+# Returns: [{ function_name, error_type, pr_url }]
+```
+
+## VectorWaveReplayer
+
+### Constructor
+
+```python
+from vectorwave import VectorWaveReplayer
+replayer = VectorWaveReplayer()
+```
+
+### replay()
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,                 # Max executions to replay
+    golden_only=True,         # Only Golden Dataset entries
+    mode="semantic",          # "exact" or "semantic"
+    threshold=0.85,           # Similarity threshold (semantic mode)
+    update_baseline=False,    # Update Golden with new outputs
+)
+# Returns: { passed, failed, total, details: [...] }
+```
+
+## VectorWaveDatasetManager
+
+### Constructor
+
+```python
+from vectorwave import VectorWaveDatasetManager
+dm = VectorWaveDatasetManager()
+```
+
+### register_as_golden()
+
+```python
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="Verified by QA",
+    tags=["v2", "production"],
+)
+```
+
+### recommend_candidates()
+
+```python
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5,
+)
+```
+
+### get_golden_dataset()
+
+```python
+golden = dm.get_golden_dataset(function_name="generate_response")
+```
+
+## VectorWaveArchiver
+
+### Constructor
+
+```python
+from vectorwave import VectorWaveArchiver
+archiver = VectorWaveArchiver()
+```
+
+### export()
+
+```python
+archiver.export(
+    output_path="data/executions.jsonl",
+    function_name="generate_response",
+    date_range=("2025-01-01", "2025-03-31"),
+    golden_only=False,
+)
+```
+
+### archive_and_cleanup()
+
+```python
+archiver.archive_and_cleanup(
+    older_than_days=90,
+    export_path="archive/2025-q1.jsonl",
+    keep_golden=True,
+)
+```
+
+## VectorWaveAutoInjector
+
+### Constructor
+
+```python
+from vectorwave import VectorWaveAutoInjector
+injector = VectorWaveAutoInjector()
+```
+
+### inject()
+
+```python
+injector.inject(
+    module="app.services.ai",
+    include=["func_a", "func_b"],   # Optional whitelist
+    exclude=["_private"],            # Optional blacklist
+    options={"auto": True, "team": "ai"},
+)
+```
+
+## configure_alerts()
+
+```python
+from vectorwave import configure_alerts
+
+configure_alerts(
+    webhook_url="https://discord.com/api/webhooks/...",
+    drift_threshold=0.25,
+    events=["error", "drift", "healing"],
+    format="discord",        # "discord", "slack", or "json"
+    headers=None,            # Custom headers for JSON format
+)
+```

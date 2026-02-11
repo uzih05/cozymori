@@ -1,0 +1,138 @@
+---
+title: RAG Search
+description: Natural language Q&A over your stored code and execution logs.
+order: 17
+category: VectorWave
+---
+
+## Overview
+
+VectorWave stores your function source code, execution logs, and traces in Weaviate as vectorized data. **RAG Search** lets you query this data with natural language.
+
+```python
+from vectorwave import search_and_answer
+
+answer = search_and_answer("Which functions handle user authentication?")
+print(answer)
+# "Based on your codebase, authentication is handled by:
+#  1. app.auth.verify_token() - JWT token verification
+#  2. app.auth.login() - User login with password hashing
+#  3. app.middleware.auth_guard() - Route protection middleware"
+```
+
+## Code Search
+
+### Search Functions
+
+Find functions by natural language description:
+
+```python
+from vectorwave import search_functions
+
+results = search_functions(
+    query="error handling and retry logic",
+    limit=5,
+)
+
+for func in results:
+    print(f"{func['full_name']} — {func['description']}")
+    print(f"  Module: {func['module_path']}")
+    print(f"  Score: {func['similarity']:.2f}")
+```
+
+### Search Executions
+
+Find specific execution logs:
+
+```python
+from vectorwave import search_executions
+
+results = search_executions(
+    query="timeout errors in payment processing",
+    limit=10,
+    filters={
+        "status": "error",
+        "team": "payments",
+    },
+)
+
+for log in results:
+    print(f"{log['function_name']} — {log['timestamp']}")
+    print(f"  Error: {log['error_message']}")
+    print(f"  Trace: {log['trace_id']}")
+```
+
+## RAG Q&A
+
+### Code-Level Q&A
+
+Ask questions about your codebase and get contextual answers:
+
+```python
+from vectorwave import search_and_answer
+
+# Ask about function behavior
+answer = search_and_answer(
+    "How does the semantic caching work in our generate_response function?"
+)
+
+# Ask about error patterns
+answer = search_and_answer(
+    "What are the most common errors in the payment module this week?"
+)
+
+# Ask about architecture
+answer = search_and_answer(
+    "What functions are called when a user submits a form?"
+)
+```
+
+### Trace Log Analysis
+
+Analyze distributed traces with natural language:
+
+```python
+from vectorwave import analyze_trace_log
+
+analysis = analyze_trace_log(
+    trace_id="abc-123",
+    question="Why did this trace take so long?",
+)
+
+print(analysis)
+# "The trace took 4.2s total. The bottleneck was the
+#  embed() function (3.8s), which called the OpenAI
+#  API. Consider using semantic caching to avoid
+#  redundant embedding calls."
+```
+
+## Hybrid Search
+
+VectorWave supports **hybrid search** — combining vector similarity with keyword filtering:
+
+```python
+from vectorwave import hybrid_search
+
+results = hybrid_search(
+    query="database connection pooling",
+    keyword_filter="PostgreSQL",  # Must contain this keyword
+    limit=10,
+)
+```
+
+This uses Weaviate's built-in hybrid search, combining BM25 keyword matching with vector similarity for more precise results.
+
+## Search in VectorSurfer
+
+[VectorSurfer](/docs/vectorsurf-features) provides a visual search interface:
+
+- Natural language search bar
+- Filter by function, team, status, date range
+- Click-through to full execution details
+- Trace waterfall visualization from search results
+
+## Next Steps
+
+- [Advanced Configuration](/docs/vectorwave-advanced) — Custom properties, webhooks, archiving
+- [API Reference](/docs/vectorwave-api) — Complete search API reference
+- [VectorSurfer Search](/docs/vectorsurf-features) — Visual search dashboard

@@ -1,0 +1,181 @@
+---
+title: VectorCheck
+description: CLI regression testing framework for AI/LLM applications.
+order: 30
+category: Ecosystem
+---
+
+## What is VectorCheck?
+
+**VectorCheck** is a CLI regression testing framework designed for AI/LLM applications. Traditional `assert a == b` fails for generative AI — the same prompt can produce different valid outputs. VectorCheck solves this with **vector similarity** and **LLM judge evaluation**.
+
+```bash
+pip install vectorcheck
+```
+
+## Why VectorCheck?
+
+| Approach | How It Works | Limitation |
+|---|---|---|
+| `assert a == b` | Exact string match | Fails for AI outputs — same meaning, different words |
+| VectorCheck **Exact** | Character-by-character | For deterministic functions only |
+| VectorCheck **Semantic** | Embedding cosine similarity | Handles paraphrasing and variation |
+| VectorCheck **LLM Judge** | GPT-4 evaluates equivalence | Most flexible, handles complex outputs |
+
+## CLI Commands
+
+### Run Tests
+
+```bash
+# Test all tracked functions
+vw test --target all
+
+# Test a specific function
+vw test --target app.generate_response
+
+# Semantic comparison mode
+vw test --target all --semantic --threshold 0.85
+
+# LLM judge mode
+vw test --target all --judge --model gpt-4-turbo
+```
+
+### Export Data
+
+```bash
+# Export execution logs to JSONL
+vw export --target app.generate_response --output data.jsonl
+
+# Export with filters
+vw export --target all --status success --output successes.jsonl
+
+# Export Golden Dataset only
+vw export --target all --golden --output golden.jsonl
+```
+
+### Inspect Functions
+
+```bash
+# List all tracked functions
+vw list
+
+# Show details for a specific function
+vw inspect app.generate_response
+
+# Show recent executions
+vw history app.generate_response --limit 20
+```
+
+## Testing Modes
+
+### Exact Match
+
+Compares outputs character-by-character. Best for deterministic functions.
+
+```bash
+vw test --target app.calculate_total --exact
+```
+
+Pass criteria: outputs must be identical.
+
+### Semantic Comparison
+
+Compares outputs using embedding cosine similarity. Best for AI/NLP outputs.
+
+```bash
+vw test --target app.generate_response --semantic --threshold 0.85
+```
+
+| Threshold | Strictness | Use Case |
+|---|---|---|
+| `0.95` | Very strict | Factual Q&A, summaries |
+| `0.85` | Recommended | General LLM outputs |
+| `0.75` | Lenient | Creative writing, open-ended |
+
+### LLM Judge
+
+Uses GPT-4 to evaluate whether two outputs are semantically equivalent.
+
+```bash
+vw test --target app.generate_response --judge --model gpt-4-turbo
+```
+
+The LLM judge considers:
+- Semantic meaning
+- Factual accuracy
+- Completeness
+- Tone and style (configurable)
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: AI Regression Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      weaviate:
+        image: semitechnologies/weaviate:1.26.1
+        ports:
+          - 8080:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install vectorwave vectorcheck
+      - run: vw test --target all --semantic --threshold 0.85
+```
+
+### Exit Codes
+
+| Code | Meaning |
+|---|---|
+| `0` | All tests passed |
+| `1` | One or more tests failed |
+| `2` | Configuration error |
+
+## Configuration File
+
+Create `vectorcheck.yml` in your project root for persistent configuration:
+
+```yaml
+# vectorcheck.yml
+default_mode: semantic
+default_threshold: 0.85
+targets:
+  - name: app.generate_response
+    mode: semantic
+    threshold: 0.90
+  - name: app.calculate_total
+    mode: exact
+  - name: app.creative_writer
+    mode: judge
+    model: gpt-4-turbo
+```
+
+Then simply run:
+
+```bash
+vw test  # Uses configuration from vectorcheck.yml
+```
+
+## Relationship to VectorWave
+
+VectorCheck reads from the same Weaviate instance as VectorWave:
+
+```
+Your App + @vectorize → Weaviate ← VectorCheck CLI
+```
+
+The `@vectorize(replay=True)` decorator stores inputs and outputs that VectorCheck uses as test cases. The [Golden Dataset](/docs/vectorwave-drift) provides verified baselines.
+
+## Next Steps
+
+- [VectorWave Replay Testing](/docs/vectorwave-testing) — Programmatic replay API
+- [VectorSurfer Replay UI](/docs/vectorsurf-features) — Visual testing interface
+- [Contributing](/docs/contributing) — How to contribute

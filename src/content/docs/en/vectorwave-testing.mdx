@@ -1,0 +1,189 @@
+---
+title: Replay Testing
+description: Regression testing by replaying past successful executions.
+order: 16
+category: VectorWave
+---
+
+## Why Replay Testing?
+
+Traditional `assert a == b` fails for generative AI — the same prompt can produce different valid outputs. VectorWave's replay testing solves this by comparing against **known-good executions** using both exact match and semantic similarity.
+
+## Enabling Replay
+
+Add `replay=True` to capture inputs and outputs for future replay:
+
+```python
+@vectorize(
+    replay=True,
+    capture_return_value=True,
+    capture_inputs=True,
+    auto=True,
+)
+async def generate_response(query: str):
+    return await llm.complete(query)
+```
+
+Every successful execution is now stored as a potential test case.
+
+## Running Replay Tests
+
+### Basic Replay
+
+```python
+from vectorwave import VectorWaveReplayer
+
+replayer = VectorWaveReplayer()
+
+# Replay last 20 executions of a function
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,
+    golden_only=True,  # Only test against Golden Dataset
+)
+
+print(f"Passed: {results['passed']}")
+print(f"Failed: {results['failed']}")
+# → { passed: 18, failed: 2 }
+```
+
+### Comparison Modes
+
+#### Exact Match
+
+Compares outputs character-by-character:
+
+```python
+results = replayer.replay(
+    function_full_name="app.calculate_total",
+    mode="exact",
+    limit=50,
+)
+```
+
+Best for: deterministic functions (math, data transformations).
+
+#### Semantic Comparison
+
+Compares outputs using embedding cosine similarity:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    mode="semantic",
+    threshold=0.85,  # Minimum similarity to pass
+    limit=50,
+)
+```
+
+Best for: generative AI, NLP outputs, summarization.
+
+### Detailed Results
+
+```python
+for test in results["details"]:
+    print(f"Input: {test['input_preview']}")
+    print(f"Expected: {test['expected_preview']}")
+    print(f"Actual: {test['actual_preview']}")
+    print(f"Similarity: {test['similarity']:.2f}")
+    print(f"Status: {'PASS' if test['passed'] else 'FAIL'}")
+    print("---")
+```
+
+## Updating Baselines
+
+When your function legitimately changes behavior (new model, updated prompts), update the Golden Dataset:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,
+    update_baseline=True,  # Update Golden Dataset with new outputs
+)
+```
+
+> **Warning:** Only use `update_baseline=True` when you've verified the new outputs are correct. This overwrites existing Golden entries.
+
+## CLI Testing with VectorCheck
+
+For CI/CD integration, use the [VectorCheck](/docs/vectorcheck) CLI:
+
+```bash
+# Install
+pip install vectorcheck
+
+# Run all replay tests
+vw test --target all
+
+# Semantic comparison mode
+vw test --target all --semantic --threshold 0.85
+
+# Test a specific function
+vw test --target app.generate_response --semantic
+
+# Export test data for offline analysis
+vw export --target app.generate_response --output data.jsonl
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: VectorWave Regression Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      weaviate:
+        image: semitechnologies/weaviate:1.26.1
+        ports:
+          - 8080:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install vectorwave vectorcheck
+      - run: vw test --target all --semantic --threshold 0.85
+```
+
+## Test Strategies
+
+### Smoke Test
+
+Quick check that functions still work:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=5,
+    golden_only=True,
+    mode="semantic",
+    threshold=0.70,  # Low threshold, just check it's reasonable
+)
+assert results["failed"] == 0
+```
+
+### Full Regression
+
+Thorough test against entire Golden Dataset:
+
+```python
+results = replayer.replay(
+    function_full_name="app.generate_response",
+    limit=None,  # All Golden entries
+    golden_only=True,
+    mode="semantic",
+    threshold=0.90,  # Strict threshold
+)
+assert results["failed"] / results["total"] < 0.05  # Max 5% failure rate
+```
+
+## Next Steps
+
+- [RAG Search](/docs/vectorwave-search) — Search your codebase with AI
+- [VectorCheck CLI](/docs/vectorcheck) — Full CLI testing framework
+- [Advanced Configuration](/docs/vectorwave-advanced) — Custom properties and tagging

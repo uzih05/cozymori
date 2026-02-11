@@ -1,0 +1,201 @@
+---
+title: Self-Healing
+description: Autonomous error diagnosis, code fix generation, and GitHub PR creation.
+order: 14
+category: VectorWave
+---
+
+## How Self-Healing Works
+
+When a `@vectorize`-decorated function throws an error, VectorWave can automatically:
+
+1. **Detect** the error and store it with full context
+2. **Diagnose** the root cause using RAG over your codebase
+3. **Generate** a code fix using LLM + AST parsing
+4. **Submit** a GitHub Pull Request with the fix
+
+```
+Error Occurs → RAG Diagnosis → LLM Code Fix → AST Patch → GitHub PR
+```
+
+## Quick Example
+
+```python
+@vectorize(auto=True)
+def risky_calculation(a, b):
+    return a / b
+
+risky_calculation(10, 0)  # ZeroDivisionError!
+```
+
+What happens automatically:
+
+1. `AutoHealerBot` detects `ZeroDivisionError`
+2. Retrieves the source code and error stack trace from Weaviate
+3. Sends context to GPT-4 for analysis
+4. Generates a patched version with zero-division guard
+5. Creates a new branch and opens a **GitHub Pull Request**
+
+## Using VectorWaveHealer
+
+### Basic Usage
+
+```python
+from vectorwave import VectorWaveHealer
+
+healer = VectorWaveHealer(model="gpt-4-turbo")
+
+# Diagnose recent errors for a specific function
+diagnosis = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,
+    create_pr=True,  # Opens a GitHub PR with the fix
+)
+
+print(diagnosis)
+# {
+#   "error_type": "ZeroDivisionError",
+#   "root_cause": "No guard for zero denominator",
+#   "fix_description": "Added zero-check with fallback",
+#   "pr_url": "https://github.com/org/repo/pull/42"
+# }
+```
+
+### Diagnosis Only (No PR)
+
+```python
+diagnosis = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,
+    create_pr=False,  # Just diagnose, don't create PR
+)
+
+print(diagnosis["root_cause"])
+print(diagnosis["suggested_fix"])
+```
+
+### Batch Healing
+
+Diagnose and fix all recent errors across all tracked functions:
+
+```python
+results = healer.batch_heal(
+    lookback_minutes=120,
+    create_pr=True,
+    max_prs=5,  # Limit number of PRs created
+)
+
+for result in results:
+    print(f"{result['function_name']}: {result['pr_url']}")
+```
+
+## The Healing Pipeline
+
+### Step 1: Error Detection
+
+When a `@vectorize` function fails, the execution log is stored in Weaviate with:
+
+- `status: "error"`
+- Full exception type and message
+- Stack trace
+- Function inputs that caused the error
+- Source code of the function
+
+### Step 2: RAG-Based Diagnosis
+
+The healer performs a RAG query over your stored data:
+
+1. Searches `VectorWaveFunctions` for the function's source code
+2. Searches `VectorWaveExecutions` for recent error logs
+3. Retrieves similar past errors and their resolutions
+4. Constructs a comprehensive prompt with all context
+
+### Step 3: LLM Code Generation
+
+The prompt is sent to GPT-4 with instructions to:
+
+- Analyze the root cause
+- Generate a minimal, targeted fix
+- Preserve the original function's behavior for non-error cases
+- Include proper error handling
+
+### Step 4: AST Patching
+
+VectorWave uses Python's `ast` module to:
+
+1. Parse the original source file
+2. Locate the target function in the AST
+3. Replace it with the LLM-generated fix
+4. Write the patched file (preserving formatting)
+
+This is safer than string replacement — it ensures syntactically valid Python.
+
+### Step 5: GitHub PR
+
+Using PyGithub, VectorWave:
+
+1. Creates a new branch: `vectorwave/fix-{function_name}-{timestamp}`
+2. Commits the patched file
+3. Opens a Pull Request with:
+   - Error description
+   - Root cause analysis
+   - Diff of the fix
+   - Test suggestions
+
+## Cooldown Mechanism
+
+To prevent PR spam for recurring errors, VectorWave implements a **cooldown**:
+
+- After creating a PR for a specific error pattern, the healer will not create another PR for the same pattern for a configurable period
+- Default cooldown: 1 hour
+- This prevents flooding your repository with duplicate fix attempts
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Required for self-healing
+OPENAI_API_KEY=sk-...
+
+# GitHub integration (for auto-PR)
+GITHUB_TOKEN=ghp_...
+GITHUB_REPO=org/repo-name
+```
+
+### Healer Options
+
+```python
+healer = VectorWaveHealer(
+    model="gpt-4-turbo",     # LLM model for diagnosis
+    temperature=0.1,          # Low temperature for precise fixes
+    max_tokens=2000,          # Max tokens for fix generation
+)
+```
+
+## Error Code Tracking
+
+VectorWave uses a 3-tier priority system for error classification:
+
+1. **Custom Exception Attribute** — If your exception has a `.error_code` attribute, it's used first
+2. **Global Mapping File** — `.vectorwave_errors.json` in project root maps exception types to codes
+3. **Default** — Falls back to the exception class name (e.g., `ZeroDivisionError`)
+
+### Custom Error Mapping
+
+Create `.vectorwave_errors.json` in your project root:
+
+```json
+{
+  "ValueError": "VW-001",
+  "ConnectionError": "VW-002",
+  "TimeoutError": "VW-003",
+  "RateLimitError": "VW-004"
+}
+```
+
+## Next Steps
+
+- [Drift Detection](/docs/vectorwave-drift) — Monitor input quality changes
+- [Replay Testing](/docs/vectorwave-testing) — Regression test with past executions
+- [VectorSurfer AI Healer](/docs/vectorsurf-features) — Visual healing dashboard

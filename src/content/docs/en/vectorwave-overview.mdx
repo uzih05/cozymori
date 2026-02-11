@@ -1,0 +1,116 @@
+---
+title: VectorWave Overview
+description: What is VectorWave and how does Execution-Level Semantic Optimization work?
+order: 10
+category: VectorWave
+---
+
+## What is VectorWave?
+
+**VectorWave** is a unified framework designed to solve the "Efficiency vs. Reliability" dilemma in LLM-integrated applications. It introduces **Execution-Level Semantic Optimization** combined with **Autonomous Self-Healing**.
+
+We transform volatile data that disappears the moment code is executed into a **Searchable and Reusable permanent knowledge asset**.
+
+Unlike conventional semantic caching tools that focus on text similarity, VectorWave captures the entire **Function Execution Context**. It creates a permanent "Golden Dataset" from successful executions to:
+
+1. **Slash Costs** — Serve cached results for semantically similar inputs, bypassing expensive computations.
+2. **Fix Bugs** — Automatically diagnose runtime errors and generate GitHub PRs using LLM.
+3. **Monitor Quality** — Detect when user inputs start drifting away from known patterns (Semantic Drift).
+
+## Architecture
+
+VectorWave's architecture consists of three core components:
+
+```
+┌──────────────────────────────────────────────────┐
+│                   VectorWave                      │
+│                                                   │
+│  ┌─────────────────┐  ┌──────────────────────┐   │
+│  │ Optimization     │  │ Trace Context         │   │
+│  │ Engine           │  │ Manager               │   │
+│  │                  │  │                       │   │
+│  │ • Cache Hit Check│  │ • Execution Logging   │   │
+│  │ • HNSW Index     │  │ • Input/Output Store  │   │
+│  │ • Batch Write    │  │ • trace_id / span_id  │   │
+│  └────────┬─────────┘  └───────────┬───────────┘   │
+│           │                        │               │
+│  ┌────────┴────────────────────────┴───────────┐   │
+│  │          Self-Healing Pipeline               │   │
+│  │                                              │   │
+│  │  • Error Detection → RAG Diagnosis           │   │
+│  │  • LLM Code Fix → AST Patching              │   │
+│  │  • Branch Creation → GitHub PR               │   │
+│  └──────────────────────────────────────────────┘   │
+│                        │                            │
+│                    Weaviate                          │
+│              (Vector Database)                       │
+└──────────────────────────────────────────────────────┘
+```
+
+### Core Components
+
+- **Optimization Engine** — Intercepts function calls to check for semantic cache hits using HNSW indexes. On a hit, returns the cached result in ~0.02s instead of re-executing the function.
+- **Trace Context Manager** — Collects execution logs, inputs, and outputs without modifying your code structure. Supports hierarchical distributed tracing with `trace_id` and `span_id`.
+- **Self-Healing Pipeline** — An autonomous agent that wakes up on errors, diagnoses the root cause via RAG, uses AST parsing to generate a code fix, and submits a GitHub Pull Request.
+
+### Data Storage
+
+VectorWave stores data in two Weaviate collections:
+
+| Collection | Purpose | Data |
+|---|---|---|
+| `VectorWaveFunctions` | Static function metadata | Source code, docstrings, descriptions, module paths |
+| `VectorWaveExecutions` | Dynamic execution logs | Inputs, outputs, errors, trace IDs, timestamps, embeddings |
+
+## Performance Benchmark
+
+| Metric | Direct Execution | With VectorWave | Improvement |
+|---|---|---|---|
+| **Latency (Hit)** | ~2.5s (LLM API) | **~0.02s** | **125x Faster** |
+| **Cost (Hit)** | $0.03 / call | **$0.00** | **100% Savings** |
+| **Reliability** | Manual Fix Required | **Auto-PR Created** | **Autonomous** |
+
+## Feature Comparison
+
+| Feature | Traditional Tools (e.g., GPTCache) | **VectorWave** |
+|---|---|---|
+| **Semantic Caching** | Text-based | **Execution Context-based** |
+| **Self-Healing (Auto-Fix)** | No | **Autonomous** |
+| **GitOps (Auto-PR)** | No | **Seamless** |
+| **Semantic Drift Detection** | No | **Drift Radar** |
+| **Zero-Config Setup** | Setup Required | **Single Decorator** |
+
+## Ecosystem
+
+VectorWave is the core SDK in the cozymori ecosystem:
+
+```
+┌──────────────────────────────────────────┐
+│              VectorWave                   │
+│  (Core SDK — traces, caches, heals)      │
+│  Stores execution data in Weaviate       │
+└──────────┬───────────┬───────────┬───────┘
+           │           │           │
+           v           v           v
+┌──────────┐ ┌────────────┐ ┌───────────┐
+│VectorSurfer│ │VectorSurfer│ │VectorCheck│
+│(Next.js +  │ │STL         │ │(CLI Test  │
+│ FastAPI)   │ │(Streamlit) │ │ Framework)│
+└────────────┘ └────────────┘ └───────────┘
+```
+
+- **[VectorSurfer](/docs/vectorsurf-overview)** — Full-stack web dashboard (Next.js + FastAPI)
+- **[VectorSurferSTL](/docs/vectorsurferstl)** — Lightweight Streamlit dashboard
+- **[VectorCheck](/docs/vectorcheck)** — CLI regression testing framework
+
+## Requirements
+
+- Python 3.10 — 3.13
+- Docker (for Weaviate vector database)
+- OpenAI API key (optional, for self-healing and RAG features)
+
+## Next Steps
+
+- [Installation Guide](/docs/vectorwave-installation) — Get VectorWave up and running
+- [@vectorize Core](/docs/vectorwave-core) — Understand the core decorator
+- [Semantic Caching](/docs/vectorwave-caching) — Cut LLM costs by 90%+

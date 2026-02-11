@@ -1,0 +1,198 @@
+---
+title: Features Guide
+description: Detailed walkthrough of VectorSurfer's dashboard features.
+order: 22
+category: VectorSurfer
+---
+
+## Bento Grid Dashboard
+
+The main dashboard uses a **Bento grid layout** — a responsive, card-based arrangement that shows all key metrics at a glance.
+
+### KPI Cards
+
+Four top-level KPI cards:
+
+| Card | Metric | Description |
+|---|---|---|
+| **Total Calls** | Count | Total function executions tracked |
+| **Avg Latency** | Milliseconds | Average execution time across all functions |
+| **Error Rate** | Percentage | Ratio of failed to total executions |
+| **Cache Hit %** | Percentage | Semantic cache hit rate |
+
+### Execution Timeline
+
+Real-time chart showing function executions over time:
+
+- Stacked area chart with success/error/cached breakdown
+- Configurable time range (1h, 6h, 24h, 7d, 30d)
+- Hover for detailed breakdowns per timestamp
+- Auto-refreshes at configurable intervals
+
+### Error Distribution
+
+Pie/donut chart of error types:
+
+- Grouped by error code or exception type
+- Click to filter execution list by error type
+- Color-coded severity levels
+
+### Widget Customization
+
+Drag-and-drop widgets to customize your dashboard layout. Resize widgets and save layouts per user.
+
+## Trace Waterfall
+
+The trace waterfall visualizes distributed traces created by `@vectorize` and `@trace_span`.
+
+### Reading the Waterfall
+
+```
+pipeline()                    ████████████████████████░░░░░ 450ms
+├── embed()                   ██████████░░░░░░░░░░░░░░░░░░  180ms
+├── search()                  ░░░░░░░░░░████████░░░░░░░░░░  150ms
+└── format_result()           ░░░░░░░░░░░░░░░░░░██░░░░░░░░   20ms
+```
+
+- **Horizontal bars** represent span duration
+- **Nesting** shows parent-child relationships
+- **Colors** indicate status:
+  - Green = success
+  - Red = error
+  - Blue = cache hit
+  - Gray = in progress
+
+### Span Details
+
+Click any span to see:
+
+- Function name and module path
+- Input parameters (if `capture_inputs=True`)
+- Return value (if `capture_return_value=True`)
+- Error details and stack trace (if failed)
+- Duration breakdown
+- Cache hit status
+- Weaviate UUID for raw data access
+
+### Filtering Traces
+
+- Filter by function name, status, duration range
+- Sort by timestamp, duration, or error count
+- Search traces by trace ID
+
+## AI Healer
+
+The AI Healer provides a visual interface for [VectorWave's self-healing](/docs/vectorwave-healing) capabilities.
+
+### Error Browser
+
+Browse all recent errors with:
+
+- Error type and message
+- Affected function and module
+- Timestamp and frequency
+- Stack trace preview
+
+### Single Diagnosis
+
+1. Select an error from the list
+2. Click "Diagnose" to run the AI Healer
+3. View the diagnosis:
+   - Root cause analysis
+   - Suggested code fix with diff highlighting
+   - Confidence score
+4. Click "Create PR" to open a GitHub Pull Request
+
+### Batch Diagnosis
+
+1. Select multiple errors (or "Select All")
+2. Click "Batch Diagnose"
+3. Review all diagnoses in a summary view
+4. Create PRs for approved fixes
+
+### Diagnosis History
+
+View past diagnoses and their outcomes:
+
+- Which fixes were merged
+- Which were rejected
+- Success rate over time
+
+## Replay Testing UI
+
+Visual interface for [VectorWave's replay testing](/docs/vectorwave-testing).
+
+### Running a Replay
+
+1. Select a function from the sidebar
+2. Choose test entries:
+   - **Golden Only** — Only verified Golden Dataset entries
+   - **All** — All stored executions
+3. Select comparison mode:
+   - **Exact Match** — Character-by-character comparison
+   - **Semantic** — Embedding similarity with configurable threshold
+4. Click "Run Replay"
+
+### Results View
+
+- **Summary** — Pass/fail counts, success rate
+- **Detail View** — Side-by-side comparison of expected vs actual output
+- **Similarity Score** — Cosine similarity for semantic comparisons
+- **Diff View** — Character-level diff for exact match failures
+
+### Golden Dataset Management
+
+- Browse all Golden Dataset entries per function
+- Promote new executions to Golden status
+- Remove outdated Golden entries
+- View AI-recommended candidates for Golden promotion
+
+## Semantic Search
+
+Full-text and vector search across all VectorWave data.
+
+### Search Interface
+
+- Natural language search bar at the top
+- Real-time results as you type
+- Filter by:
+  - Function name
+  - Team
+  - Status (success/error/cached)
+  - Date range
+  - Error code
+
+### Search Results
+
+Results include:
+
+- **Functions** — Matching function definitions with source code preview
+- **Executions** — Matching execution logs with input/output previews
+- **Errors** — Matching error logs with stack traces
+- **Traces** — Matching trace chains with waterfall preview
+
+### RAG Q&A
+
+Click "Ask AI" to use [RAG-powered Q&A](/docs/vectorwave-search):
+
+- Type a question in natural language
+- Get contextual answers based on your codebase
+- Sources are linked for verification
+
+## Multi-Language UI
+
+VectorSurfer supports three languages:
+
+| Language | Code | Coverage |
+|---|---|---|
+| English | `en` | Full |
+| Japanese | `ja` | Full |
+| Korean | `ko` | Full |
+
+Switch languages from the settings menu. All UI elements, labels, and messages are translated.
+
+## Next Steps
+
+- [VectorSurfer Setup](/docs/vectorsurf-setup) — Installation guide
+- [VectorWave Overview](/docs/vectorwave-overview) — The core SDK
+- [VectorSurferSTL](/docs/vectorsurferstl) — Lightweight alternative

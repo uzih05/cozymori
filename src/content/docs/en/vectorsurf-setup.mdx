@@ -1,0 +1,212 @@
+---
+title: Setup & Installation
+description: Get VectorSurfer running with Docker, Next.js, and FastAPI.
+order: 21
+category: VectorSurfer
+---
+
+## Prerequisites
+
+- **Node.js** 18+ (for Next.js frontend)
+- **Python** 3.10+ (for FastAPI backend)
+- **Docker** (for Weaviate)
+- **Git**
+
+## 1. Start Weaviate
+
+VectorSurfer connects to the same Weaviate instance as VectorWave. If you already have Weaviate running, skip this step.
+
+### Docker Compose (Recommended)
+
+Create `vw_docker.yml`:
+
+```yaml
+version: '3.4'
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      ENABLE_MODULES: 'text2vec-openai'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      OPENAI_APIKEY: ${OPENAI_API_KEY}
+      AUTHENTICATION_ANONYMOUS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - ./weaviate-data:/var/lib/weaviate
+
+  console:
+    image: semitechnologies/weaviate-console:latest
+    ports:
+      - "8081:8080"
+    environment:
+      WEAVIATE_URL: "http://weaviate:8080"
+```
+
+```bash
+docker-compose -f vw_docker.yml up -d
+```
+
+This starts:
+- **Weaviate** on `http://localhost:8080`
+- **Weaviate Console** on `http://localhost:8081` (optional web UI for Weaviate)
+
+## 2. Clone VectorSurfer
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer
+```
+
+## 3. Setup Frontend
+
+```bash
+npm install
+```
+
+### Frontend Environment
+
+Create `.env.local` in the project root:
+
+```bash
+# Weaviate connection
+WEAVIATE_URL=http://localhost:8080
+
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## 4. Setup Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### Backend Environment
+
+Create `.env` in the `backend/` directory:
+
+```bash
+# Weaviate
+WEAVIATE_URL=http://localhost:8080
+
+# OpenAI (for AI Healer and RAG)
+OPENAI_API_KEY=sk-...
+
+# GitHub (for auto-PR via AI Healer)
+GITHUB_TOKEN=ghp_...
+GITHUB_REPO=your-org/your-repo
+```
+
+## 5. Run Development Server
+
+### Option A: Concurrent (Recommended)
+
+From the project root:
+
+```bash
+npm run dev
+```
+
+This starts both the Next.js frontend and FastAPI backend concurrently.
+
+### Option B: Separate Terminals
+
+**Terminal 1 — Frontend:**
+
+```bash
+npm run dev:frontend
+# → http://localhost:3000
+```
+
+**Terminal 2 — Backend:**
+
+```bash
+cd backend
+python run.py
+# → http://localhost:8000
+```
+
+## 6. Verify
+
+Open `http://localhost:3000` in your browser. You should see the VectorSurfer dashboard.
+
+If VectorWave has already stored data in Weaviate, the dashboard will display:
+
+- KPI cards with real data
+- Execution timeline
+- Function list in the sidebar
+
+If Weaviate is empty, the dashboard will show placeholder states.
+
+## Project Structure
+
+```
+VectorSurfer/
+├── src/                    # Next.js frontend
+│   ├── app/                # App router pages
+│   ├── components/         # React components
+│   └── lib/                # Utilities
+├── backend/                # FastAPI backend
+│   ├── app/                # API routes and services
+│   ├── requirements.txt    # Python dependencies
+│   └── run.py              # Entry point
+├── public/                 # Static assets
+├── vw_docker.yml           # Docker Compose for Weaviate
+├── package.json
+└── next.config.ts
+```
+
+## Troubleshooting
+
+### Backend connection refused
+
+```
+Error: Failed to fetch from http://localhost:8000
+```
+
+Make sure the FastAPI backend is running:
+
+```bash
+cd backend && python run.py
+```
+
+### Weaviate connection failed
+
+```
+ConnectionError: Connection to Weaviate failed
+```
+
+Check Docker is running:
+
+```bash
+docker ps | grep weaviate
+```
+
+### Empty dashboard
+
+If the dashboard shows no data, ensure VectorWave has logged some executions:
+
+```python
+from vectorwave import vectorize, initialize_database
+
+initialize_database()
+
+@vectorize(auto=True, capture_return_value=True)
+def test_function(x: str):
+    return f"Hello {x}"
+
+test_function("World")
+```
+
+Then refresh the VectorSurfer dashboard.
+
+## Next Steps
+
+- [Features Guide](/docs/vectorsurf-features) — Detailed feature walkthrough
+- [VectorWave Quick Start](/docs/quickstart) — Generate data for the dashboard
+- [VectorSurferSTL](/docs/vectorsurferstl) — Lightweight Streamlit alternative

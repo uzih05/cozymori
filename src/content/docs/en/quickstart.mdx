@@ -1,0 +1,173 @@
+---
+title: Quick Start
+description: Get up and running with cozymori tools in under 5 minutes.
+order: 2
+category: Getting Started
+---
+
+## Prerequisites
+
+- Python 3.10 or higher
+- Docker (to run Weaviate)
+
+## 1. Start Weaviate
+
+VectorWave uses Weaviate as its vector database. Start it with Docker:
+
+```bash
+docker run -d \
+  --name weaviate \
+  -p 8080:8080 \
+  -p 50051:50051 \
+  cr.weaviate.io/semitechnologies/weaviate:latest
+```
+
+## 2. Install VectorWave
+
+```bash
+pip install vectorwave
+```
+
+## 3. Initialize and Start Tracing
+
+```python
+from vectorwave import vectorize, initialize_database
+
+# Create Weaviate collections
+initialize_database()
+
+# Decorate any function to trace and cache it
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,
+    team="my-team"
+)
+async def generate_response(query: str):
+    # Your LLM call here
+    return await llm.complete(query)
+```
+
+That's it. Every call to `generate_response` is now:
+- **Vectorized** — input is converted to an embedding
+- **Traced** — execution is logged with trace_id/span_id
+- **Cached** — similar queries return instantly from cache
+
+## 4. Self-Healing (Optional)
+
+When errors happen, let AI diagnose and fix them:
+
+```python
+from vectorwave import VectorWaveHealer
+
+healer = VectorWaveHealer(model="gpt-4-turbo")
+
+# Diagnose recent errors and open a GitHub PR with the fix
+result = healer.diagnose_and_heal(
+    function_name="generate_response",
+    lookback_minutes=60,
+    create_pr=True
+)
+```
+
+The healer:
+1. Searches Weaviate for the function definition and recent error logs
+2. Constructs a prompt with full context for GPT-4
+3. Uses AST parsing to patch the source file
+4. Creates a branch and opens a GitHub PR via PyGithub
+
+## 5. Drift Detection (Optional)
+
+Monitor when inputs start drifting from known-good data:
+
+```python
+from vectorwave import VectorWaveDatasetManager
+
+dm = VectorWaveDatasetManager()
+
+# Promote a verified execution to "Golden" status
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="Verified by QA",
+    tags=["v2", "production"]
+)
+
+# Get recommendations for new golden candidates
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5
+)
+```
+
+When new inputs exceed the drift threshold from your Golden Dataset centroid, VectorWave sends a webhook alert (Discord, Slack, etc.).
+
+## 6. Launch the Dashboard
+
+### VectorSurfer (Full-stack)
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer
+npm install
+npm run dev  # Starts Next.js + FastAPI concurrently
+```
+
+Open `http://localhost:3000` to see:
+- Real-time KPI cards (executions, success rate, avg duration)
+- Execution timeline charts
+- Distributed trace waterfall
+- AI-powered error diagnosis
+- Replay testing UI
+
+### VectorSurferSTL (Lightweight)
+
+```bash
+git clone https://github.com/Cozymori/VectorSurferSTL
+cd VectorSurferSTL
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+## 7. Regression Testing with VectorCheck
+
+```bash
+pip install vectorcheck
+
+# Run tests against all tracked functions
+vw test --target all
+
+# Semantic comparison mode (for generative AI)
+vw test --target all --semantic --threshold 0.85
+
+# Export execution logs for offline analysis
+vw export --target my_module.my_function --output data.jsonl
+```
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | For caching/healing | OpenAI API key for embeddings and LLM features |
+| `WEAVIATE_URL` | No | Weaviate URL (default: `http://localhost:8080`) |
+| `VECTORWAVE_VECTORIZER` | No | `openai` or `huggingface` (default: `huggingface`) |
+
+### @vectorize Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `semantic_cache` | bool | `False` | Enable semantic caching |
+| `cache_threshold` | float | `0.9` | Cosine similarity threshold for cache hits |
+| `capture_return_value` | bool | `False` | Store return values in Weaviate |
+| `capture_inputs` | bool | `False` | Auto-capture all function parameters |
+| `replay` | bool | `False` | Enable replay-based regression testing |
+| `auto` | bool | `False` | Auto-generate metadata via LLM |
+| `search_description` | str | `None` | Description for vector search |
+| `team` | str | `None` | Team tag for filtering |
+
+## What's Next?
+
+- Explore the [VectorWave](/vectorwave) product page for detailed features
+- Check out the [VectorSurfer](/vectorsurf) dashboard
+- Browse [GitHub](https://github.com/Cozymori) for source code and issues

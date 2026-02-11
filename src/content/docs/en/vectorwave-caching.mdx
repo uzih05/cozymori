@@ -1,0 +1,169 @@
+---
+title: Semantic Caching
+description: Reduce LLM costs and latency by caching semantically similar inputs.
+order: 13
+category: VectorWave
+---
+
+## How Semantic Caching Works
+
+Traditional caching matches inputs **exactly**. Semantic caching matches inputs by **meaning**.
+
+```
+"How do I fix a Python bug?"     → Cache MISS → Execute → 2.0s
+"Tell me how to debug Python."   → Cache HIT  → Return  → 0.02s
+```
+
+VectorWave converts function inputs to embedding vectors and compares them using cosine similarity. If a new input is similar enough to a cached one, the stored result is returned instantly.
+
+## Basic Usage
+
+```python
+import time
+from vectorwave import vectorize, initialize_database
+
+initialize_database()
+
+@vectorize(semantic_cache=True, cache_threshold=0.95, auto=True)
+def expensive_llm_task(query: str):
+    time.sleep(2)  # Simulates LLM API call
+    return f"Processed result for: {query}"
+
+# First call: Cache Miss → executes normally (2.0s)
+print(expensive_llm_task("How do I fix a Python bug?"))
+
+# Second call: Cache Hit → returns instantly (0.02s!)
+print(expensive_llm_task("Tell me how to debug Python code."))
+```
+
+## Configuration
+
+### cache_threshold
+
+The cosine similarity threshold for considering two inputs as "similar enough."
+
+```python
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,  # 0.0 to 1.0
+)
+```
+
+| Threshold | Behavior | Use Case |
+|---|---|---|
+| `0.99` | Very strict — nearly identical inputs only | Financial calculations |
+| `0.95` | Recommended default — similar meanings | General LLM caching |
+| `0.90` | Lenient — broader matches | FAQ / Knowledge base |
+| `0.85` | Very lenient — loose semantic matches | Creative / exploratory |
+
+### capture_return_value
+
+**Required for caching.** Without this, VectorWave can't return a cached result:
+
+```python
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,  # Stores the return value
+)
+def my_function(query: str):
+    return llm.complete(query)
+```
+
+## Cache Scope (Multi-tenancy)
+
+By default, the cache is global. Use `semantic_cache_scope` to isolate caches by project or user:
+
+```python
+# Project-level isolation
+@vectorize(
+    semantic_cache=True,
+    semantic_cache_scope="project-alpha",
+)
+def project_alpha_query(query: str):
+    return llm.complete(query, system_prompt=alpha_prompt)
+
+@vectorize(
+    semantic_cache=True,
+    semantic_cache_scope="project-beta",
+)
+def project_beta_query(query: str):
+    return llm.complete(query, system_prompt=beta_prompt)
+```
+
+Even if both functions receive identical queries, their caches are completely separate.
+
+### Dynamic Scope
+
+You can use runtime values for per-user caching:
+
+```python
+@vectorize(
+    semantic_cache=True,
+    semantic_cache_scope=f"user-{current_user.id}",
+)
+def personalized_query(query: str):
+    return llm.complete(query, user_context=current_user.profile)
+```
+
+## How Cache Lookup Works
+
+```
+Input: "How do I debug Python?"
+         │
+         ▼
+   Embedding Vector
+   [0.12, -0.45, 0.78, ...]
+         │
+         ▼
+   HNSW Index Search
+   (Weaviate nearVector)
+         │
+         ▼
+   Cosine Similarity Check
+   ┌──────────────────────────┐
+   │ Cached: "Fix Python bug" │
+   │ Similarity: 0.97         │
+   │ Threshold: 0.95          │
+   │ Result: HIT ✓            │
+   └──────────────────────────┘
+         │
+         ▼
+   Return Cached Result
+   (0.02s vs 2.5s)
+```
+
+## Performance Impact
+
+| Metric | Without Caching | With Caching (Hit) |
+|---|---|---|
+| Latency | ~2.5s (LLM API) | **~0.02s** |
+| Cost per call | ~$0.03 | **$0.00** |
+| Token usage | Full | **Zero** |
+
+For applications with repetitive queries (customer support, FAQ bots, search), caching typically achieves a **60-90% hit rate**, reducing LLM costs proportionally.
+
+## Monitoring Cache Performance
+
+Check cache hit rates via VectorWave's execution logs:
+
+```python
+from vectorwave import search_executions
+
+# Find all cached executions for a function
+cached = search_executions(
+    function_name="expensive_llm_task",
+    filters={"cache_hit": True},
+    limit=100,
+)
+
+print(f"Cache hits: {len(cached)}")
+```
+
+Or use [VectorSurfer](/docs/vectorsurf-overview) for a visual dashboard with real-time cache hit rate charts.
+
+## Next Steps
+
+- [Self-Healing](/docs/vectorwave-healing) — Automatic error diagnosis
+- [Drift Detection](/docs/vectorwave-drift) — Monitor input quality
+- [API Reference](/docs/vectorwave-api) — All caching parameters

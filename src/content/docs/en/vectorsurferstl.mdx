@@ -1,0 +1,99 @@
+---
+title: VectorSurferSTL
+description: Lightweight Streamlit-based dashboard for VectorWave monitoring.
+order: 31
+category: Ecosystem
+---
+
+## What is VectorSurferSTL?
+
+**VectorSurferSTL** is a lightweight, single-process alternative to [VectorSurfer](/docs/vectorsurf-overview). Built with **Streamlit**, it provides the same core monitoring features in a much simpler setup — no Node.js, no FastAPI, just Python.
+
+| Feature | VectorSurfer | VectorSurferSTL |
+|---|---|---|
+| **Stack** | Next.js + FastAPI | Streamlit (Python only) |
+| **Setup time** | ~5 min | ~1 min |
+| **Best for** | Production, teams | Quick setup, local dev |
+| **Dashboard** | Bento grid, drag-drop | Streamlit widgets |
+| **AI Healer** | Full UI | Basic UI |
+| **Multi-language** | EN/JA/KO | EN only |
+| **Customization** | High (React components) | Moderate (Streamlit) |
+
+## Quick Start
+
+```bash
+git clone https://github.com/Cozymori/VectorSurferSTL
+cd VectorSurferSTL
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Open `http://localhost:8501` in your browser.
+
+## Prerequisites
+
+- **Python** 3.10+
+- **Docker** (for Weaviate)
+- **Weaviate** running on `http://localhost:8080`
+
+If you already have Weaviate running for VectorWave, no additional database setup is needed.
+
+## Environment Setup
+
+Create `.env` in the project root:
+
+```bash
+# Weaviate
+WEAVIATE_URL=http://localhost:8080
+
+# OpenAI (for AI Healer and search)
+OPENAI_API_KEY=sk-...
+```
+
+## Features
+
+### Dashboard
+
+- Function execution count and success rate
+- Average latency metrics
+- Cache hit rate
+- Error count and recent errors
+
+### Execution Browser
+
+- List all tracked function executions
+- Filter by function name, status, date range
+- View execution details: inputs, outputs, errors
+- Trace ID linking
+
+### Search
+
+- Search executions by keyword
+- Filter by function, team, status
+
+### AI Healer (Basic)
+
+- Select an error to diagnose
+- View AI-generated root cause analysis
+- See suggested code fix
+
+## When to Use VectorSurferSTL
+
+**Choose VectorSurferSTL when:**
+- You need a quick visual check of your VectorWave data
+- You're developing locally and want minimal setup
+- You're the sole developer on the project
+- You prefer an all-Python stack
+
+**Choose VectorSurfer when:**
+- You're running in production
+- Multiple team members need access
+- You need the full Bento grid dashboard
+- You want multi-language support
+- You need advanced features (trace waterfall, batch healing, Golden Dataset management)
+
+## Next Steps
+
+- [VectorSurfer](/docs/vectorsurf-overview) — Full-stack dashboard
+- [VectorWave Overview](/docs/vectorwave-overview) — The core SDK
+- [Quick Start](/docs/quickstart) — Get VectorWave running

@@ -1,0 +1,240 @@
+---
+title: Advanced Configuration
+description: Custom properties, dynamic tagging, webhooks, auto-injection, and data archiving.
+order: 18
+category: VectorWave
+---
+
+## Custom Properties
+
+Extend VectorWave's default schema with custom Weaviate properties using `.weaviate_properties`:
+
+```python
+@vectorize(auto=True)
+def process_order(order_id: str, amount: float):
+    return {"status": "processed", "order_id": order_id}
+
+# Define custom properties for this function
+process_order.weaviate_properties = {
+    "order_id": {
+        "type": "text",
+        "tokenization": "field",  # Exact matching for IDs
+    },
+    "amount": {
+        "type": "number",
+    },
+    "region": {
+        "type": "text",
+    },
+}
+```
+
+### Tokenization Options
+
+| Tokenization | Behavior | Use Case |
+|---|---|---|
+| `"word"` | Splits on whitespace | Natural text fields |
+| `"field"` | Treats entire value as one token | IDs, codes, exact matches |
+| `"lowercase"` | Word-split + lowercase | Case-insensitive text |
+
+> **Tip:** Use `"field"` tokenization for ID fields like `order_id`, `user_id`, etc. This ensures exact-match filtering works correctly.
+
+## Dynamic Execution Tagging
+
+Add metadata tags to executions for filtering and monitoring.
+
+### Global Tags (Environment Variables)
+
+Set tags that apply to all functions:
+
+```bash
+# .env
+VECTORWAVE_TAGS_ENVIRONMENT=production
+VECTORWAVE_TAGS_REGION=us-east-1
+VECTORWAVE_TAGS_VERSION=v2.3.0
+```
+
+### Function-Level Tags (Decorator)
+
+```python
+@vectorize(
+    auto=True,
+    team="payments",
+    tags={"priority": "high", "sla": "99.9%"},
+)
+def process_payment(amount: float):
+    ...
+```
+
+### Tag Merge Rules
+
+When both global and function-level tags exist, **function-level tags take priority**:
+
+```
+Global:   { environment: "production", region: "us-east-1" }
+Function: { environment: "staging", priority: "high" }
+Result:   { environment: "staging", region: "us-east-1", priority: "high" }
+```
+
+## Real-Time Webhook Alerting
+
+Configure webhooks for real-time notifications on errors and drift.
+
+### Discord
+
+```python
+from vectorwave import configure_alerts
+
+configure_alerts(
+    webhook_url="https://discord.com/api/webhooks/...",
+    events=["error", "drift", "healing"],
+)
+```
+
+Discord embeds include:
+
+- Error code and function name
+- Trace ID (clickable link to VectorSurfer)
+- Captured attributes and tags
+- Full stack trace
+- Drift distance (for drift events)
+
+### Slack
+
+```python
+configure_alerts(
+    webhook_url="https://hooks.slack.com/services/...",
+    format="slack",
+    events=["error"],
+)
+```
+
+### Custom HTTP Endpoint
+
+```python
+configure_alerts(
+    webhook_url="https://your-api.com/vectorwave/alerts",
+    format="json",
+    headers={"Authorization": "Bearer your-token"},
+    events=["error", "drift"],
+)
+```
+
+## Auto-Injection
+
+Inject VectorWave into existing modules **without modifying source code**:
+
+```python
+from vectorwave import VectorWaveAutoInjector
+
+injector = VectorWaveAutoInjector()
+
+# Inject @vectorize into all functions in a module
+injector.inject(
+    module="app.services.ai",
+    options={
+        "auto": True,
+        "capture_return_value": True,
+        "team": "ai-team",
+    },
+)
+
+# Now all functions in app.services.ai are vectorized
+# without changing a single line of their source code
+```
+
+### Selective Injection
+
+```python
+# Only inject into specific functions
+injector.inject(
+    module="app.services.ai",
+    include=["generate_response", "embed_query"],
+    options={"auto": True},
+)
+
+# Inject into all except specific functions
+injector.inject(
+    module="app.services.ai",
+    exclude=["internal_helper", "_private_fn"],
+    options={"auto": True},
+)
+```
+
+> **Note:** Auto-injection works at import time. Call `injector.inject()` before importing the target module.
+
+## Data Archiving
+
+Export and clean up old execution data for long-term storage or LLM fine-tuning.
+
+### Export to JSONL
+
+```python
+from vectorwave import VectorWaveArchiver
+
+archiver = VectorWaveArchiver()
+
+# Export executions to JSONL (LLM fine-tuning compatible)
+archiver.export(
+    output_path="data/executions.jsonl",
+    function_name="generate_response",  # Optional filter
+    date_range=("2025-01-01", "2025-03-31"),
+    golden_only=False,  # Export all, not just Golden
+)
+```
+
+The JSONL format is compatible with OpenAI fine-tuning:
+
+```json
+{"messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}
+```
+
+### Database Cleanup
+
+```python
+# Archive old data and remove from Weaviate
+archiver.archive_and_cleanup(
+    older_than_days=90,
+    export_path="archive/2025-q1.jsonl",
+    keep_golden=True,  # Preserve Golden Dataset entries
+)
+```
+
+### Selective Cleanup
+
+```python
+# Remove only error executions older than 30 days
+archiver.cleanup(
+    older_than_days=30,
+    filters={"status": "error"},
+)
+```
+
+## Schema Migration
+
+When upgrading VectorWave versions, the Weaviate schema may change:
+
+```python
+from vectorwave import update_database_schema
+
+# Zero-downtime migration — existing data is preserved
+update_database_schema()
+```
+
+This:
+1. Detects schema differences between current and required
+2. Adds new properties without dropping existing ones
+3. Migrates data if needed
+4. Preserves all existing execution logs and Golden Dataset entries
+
+## Tracer Performance Optimization
+
+VectorWave uses `inspect.signature` internally for function introspection. For high-throughput applications, this is cached via LRU Cache to avoid repeated reflection overhead.
+
+No configuration needed — this optimization is automatic.
+
+## Next Steps
+
+- [API Reference](/docs/vectorwave-api) — Complete parameter reference
+- [VectorSurfer Dashboard](/docs/vectorsurf-overview) — Visual monitoring
+- [Contributing](/docs/contributing) — How to contribute to VectorWave

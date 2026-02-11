@@ -1,0 +1,204 @@
+---
+title: "@vectorize Core"
+description: "The core decorator that powers function vectorization, tracing, and storage."
+order: 12
+category: VectorWave
+---
+
+## The @vectorize Decorator
+
+`@vectorize` is VectorWave's core primitive. A single decorator transforms any Python function into a **vectorized, traced, and searchable** unit of execution.
+
+```python
+from vectorwave import vectorize
+
+@vectorize(
+    semantic_cache=True,
+    cache_threshold=0.95,
+    capture_return_value=True,
+    team="ml-team"
+)
+async def generate_response(query: str):
+    return await llm.complete(query)
+```
+
+## How It Works
+
+When a decorated function is called, VectorWave performs the following:
+
+### 1. Static Registration
+
+On first import, VectorWave captures the function's **static metadata** and stores it in `VectorWaveFunctions`:
+
+- Function name, module path, fully qualified name
+- Source code (via `inspect.getsource`)
+- Docstring
+- AI-generated description (if `auto=True`)
+- Search description (if provided)
+- Custom properties (if defined via `.weaviate_properties`)
+
+### 2. Execution Interception
+
+On each call, the decorator:
+
+1. Generates a `trace_id` and `span_id` for distributed tracing
+2. Converts inputs to an embedding vector
+3. Checks for semantic cache hits (if `semantic_cache=True`)
+4. If cache hit → returns cached result in ~0.02s
+5. If cache miss → executes the function normally
+6. Stores the execution log in `VectorWaveExecutions`
+
+### 3. Error Handling
+
+If the function raises an exception:
+
+1. The error is captured with full stack trace
+2. Stored in Weaviate with `status: "error"`
+3. If self-healing is configured, triggers the `AutoHealerBot`
+
+## Sync and Async Support
+
+VectorWave supports both sync and async functions:
+
+```python
+# Sync function
+@vectorize(auto=True)
+def sync_function(query: str):
+    return process(query)
+
+# Async function
+@vectorize(auto=True)
+async def async_function(query: str):
+    return await async_process(query)
+```
+
+## Distributed Tracing
+
+### Root Span
+
+Every `@vectorize` call creates a **root span** with a unique `trace_id`:
+
+```python
+@vectorize(auto=True)
+def parent_function(data):
+    result_a = child_function_a(data)
+    result_b = child_function_b(result_a)
+    return result_b
+```
+
+### Child Spans with @trace_span
+
+Use `@trace_span` to trace internal functions as child spans:
+
+```python
+from vectorwave import vectorize, trace_span
+
+@vectorize(auto=True)
+def pipeline(query: str):
+    embedding = embed(query)
+    result = search(embedding)
+    return format_result(result)
+
+@trace_span
+def embed(query: str):
+    return model.encode(query)
+
+@trace_span
+def search(embedding):
+    return db.query(embedding, limit=10)
+
+@trace_span
+def format_result(result):
+    return {"items": result, "count": len(result)}
+```
+
+All child spans share the parent's `trace_id`, creating a hierarchical trace:
+
+```
+pipeline (trace_id: abc-123, span_id: 001)
+├── embed (trace_id: abc-123, span_id: 002)
+├── search (trace_id: abc-123, span_id: 003)
+└── format_result (trace_id: abc-123, span_id: 004)
+```
+
+### Querying Traces
+
+```python
+from vectorwave import find_by_trace_id
+
+# Get all spans for a trace
+spans = find_by_trace_id("abc-123")
+for span in spans:
+    print(f"{span['function_name']} — {span['duration_ms']}ms")
+```
+
+## Input Capture Modes
+
+### Manual (Default)
+
+By default, VectorWave captures only what you explicitly pass:
+
+```python
+@vectorize(auto=True)
+def process(query: str, context: dict):
+    # Only function name and execution metadata are stored
+    return llm.complete(query, context=context)
+```
+
+### Auto-Capture
+
+With `capture_inputs=True`, all function parameters are automatically stored:
+
+```python
+@vectorize(capture_inputs=True, auto=True)
+def process(query: str, context: dict):
+    # Both 'query' and 'context' are stored in Weaviate
+    return llm.complete(query, context=context)
+```
+
+### Return Value Capture
+
+With `capture_return_value=True`, the function's return value is also stored:
+
+```python
+@vectorize(capture_return_value=True, auto=True)
+def process(query: str):
+    result = llm.complete(query)
+    return result  # This value is stored in Weaviate
+```
+
+## AI Auto-Documentation
+
+With `auto=True`, VectorWave uses an LLM to automatically generate:
+
+- A human-readable description of the function
+- Search-optimized metadata for RAG queries
+
+```python
+@vectorize(auto=True)
+def calculate_risk_score(portfolio: dict, market_data: dict):
+    # VectorWave will auto-generate:
+    # "Calculates a risk score for a given investment portfolio
+    #  based on current market data conditions."
+    ...
+```
+
+## Team Tagging
+
+Tag functions by team for filtering and access control:
+
+```python
+@vectorize(team="ml-team", auto=True)
+def ml_function():
+    ...
+
+@vectorize(team="backend-team", auto=True)
+def backend_function():
+    ...
+```
+
+## Next Steps
+
+- [Semantic Caching](/docs/vectorwave-caching) — Deep dive into caching
+- [Self-Healing](/docs/vectorwave-healing) — Automatic error diagnosis and fix
+- [API Reference](/docs/vectorwave-api) — Complete parameter reference

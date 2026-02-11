@@ -1,0 +1,171 @@
+---
+title: Contributing
+description: How to contribute to cozymori projects — commit conventions, issues, and PRs.
+order: 32
+category: Ecosystem
+---
+
+## Getting Started
+
+All cozymori projects are open-source and welcome contributions. Here's how to get involved:
+
+1. Fork the repository on GitHub
+2. Create a feature branch from `main`
+3. Make your changes
+4. Submit a Pull Request
+
+## Repositories
+
+| Project | Repository | Language |
+|---|---|---|
+| VectorWave | [Cozymori/VectorWave](https://github.com/Cozymori/VectorWave) | Python + Rust |
+| VectorSurfer | [Cozymori/VectorSurfer](https://github.com/Cozymori/VectorSurfer) | TypeScript + Python |
+| VectorSurferSTL | [Cozymori/VectorSurferSTL](https://github.com/Cozymori/VectorSurferSTL) | Python |
+| VectorCheck | [Cozymori/VectorCheck](https://github.com/Cozymori/VectorCheck) | Python |
+
+## Commit Message Convention
+
+All cozymori projects follow a structured commit message format:
+
+### Format
+
+```
+<type>(<scope>): <subject>
+```
+
+### Types
+
+| Type | Description | Example |
+|---|---|---|
+| `feat` | New feature | `feat(cache): add multi-tenant cache scope` |
+| `fix` | Bug fix | `fix(healer): handle empty stack traces` |
+| `docs` | Documentation | `docs(readme): update installation guide` |
+| `style` | Code style (no logic change) | `style(core): fix indentation in vectorize.py` |
+| `refactor` | Code refactoring | `refactor(tracing): simplify span context manager` |
+| `test` | Adding or updating tests | `test(cache): add semantic threshold edge cases` |
+| `chore` | Build, CI, dependencies | `chore(deps): bump weaviate-client to 4.8.0` |
+| `perf` | Performance improvement | `perf(batch): optimize Rust batch writer throughput` |
+| `ci` | CI/CD changes | `ci(actions): add Python 3.13 to test matrix` |
+| `build` | Build system changes | `build(pyproject): update package metadata` |
+| `revert` | Revert previous commit | `revert: revert "feat(cache): add scope"` |
+
+### Common Scopes
+
+| Scope | Area |
+|---|---|
+| `auth` | Authentication / authorization |
+| `api` | API endpoints |
+| `ui` | User interface |
+| `database` | Database / Weaviate |
+| `config` | Configuration |
+| `deps` | Dependencies |
+| `security` | Security |
+| `i18n` | Internationalization |
+| `cache` | Caching |
+| `healer` | Self-healing |
+| `tracing` | Distributed tracing |
+| `drift` | Drift detection |
+| `replay` | Replay testing |
+
+### Best Practices
+
+- Use **imperative mood**: "add feature" not "added feature"
+- Keep subject line **under 50 characters**
+- **Capitalize** the first letter of the subject
+- **No trailing period** in the subject line
+- Use the body for "why" not "what"
+
+### Examples
+
+```bash
+# Simple feature
+feat(cache): add cache scope isolation
+
+# Bug fix with context
+fix(healer): prevent duplicate PRs for same error
+
+The cooldown mechanism was not checking the error hash,
+causing multiple PRs for identical errors within the
+cooldown window.
+
+Closes #42
+
+# Breaking change
+feat(api)!: change vectorize return type to Result
+
+BREAKING CHANGE: @vectorize now returns a Result object
+instead of the raw return value. Use result.value to
+access the original return value.
+
+# Multi-line with issue reference
+docs(guide): add semantic caching scope documentation
+
+Added documentation for the new semantic_cache_scope
+parameter, including multi-tenant examples.
+
+Refs #38
+```
+
+## Issue Templates
+
+### Bug Report
+
+When filing a bug report, include:
+
+- VectorWave / VectorSurfer version
+- Python version
+- Weaviate version
+- Steps to reproduce
+- Expected vs actual behavior
+- Error logs / stack traces
+
+### Feature Request
+
+When requesting a feature, include:
+
+- Problem description — what you're trying to do
+- Proposed solution — how you'd like it to work
+- Alternatives considered
+- Use case context
+
+## Development Setup
+
+### VectorWave
+
+```bash
+git clone https://github.com/Cozymori/VectorWave
+cd VectorWave
+pip install -e ".[dev]"  # Editable install with dev dependencies
+pytest                    # Run tests
+```
+
+### VectorSurfer
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer
+npm install               # Frontend
+cd backend && pip install -r requirements.txt  # Backend
+npm run dev               # Run both
+```
+
+## License
+
+All cozymori projects are licensed under the **MIT License**.
+
+```
+Copyright (c) 2025 Jun Yeong Kim
+```
+
+### Third-Party Components
+
+| Component | License |
+|---|---|
+| Weaviate Client | Apache License 2.0 |
+| Pydantic | MIT License |
+
+## Next Steps
+
+- [VectorWave Overview](/docs/vectorwave-overview) — Core SDK documentation
+- [VectorSurfer Overview](/docs/vectorsurf-overview) — Dashboard documentation
+- [Quick Start](/docs/quickstart) — Get started in 5 minutes

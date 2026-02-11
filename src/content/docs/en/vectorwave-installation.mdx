@@ -1,0 +1,164 @@
+---
+title: Installation
+description: Install VectorWave and set up the Weaviate vector database.
+order: 11
+category: VectorWave
+---
+
+## Prerequisites
+
+- **Python** 3.10 — 3.13
+- **Docker** (to run the Weaviate vector database)
+- (Optional) **OpenAI API Key** for AI auto-documentation, high-performance embedding, and self-healing
+
+## 1. Start Weaviate
+
+VectorWave uses [Weaviate](https://weaviate.io/) as its vector database. Start it with Docker:
+
+### Quick Start (Single Container)
+
+```bash
+docker run -d \
+  --name weaviate \
+  -p 8080:8080 \
+  -p 50051:50051 \
+  cr.weaviate.io/semitechnologies/weaviate:latest
+```
+
+### Docker Compose (Recommended)
+
+Create a `docker-compose.yml`:
+
+```yaml
+version: '3.4'
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: semitechnologies/weaviate:1.26.1
+    ports:
+    - 8080:8080
+    - 50051:50051
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai'
+      CLUSTER_HOSTNAME: 'node1'
+```
+
+```bash
+docker-compose up -d
+```
+
+## 2. Install VectorWave
+
+```bash
+pip install vectorwave
+```
+
+## 3. Environment Variables
+
+Create a `.env` file in your project root:
+
+```bash
+# Vectorizer (choose one)
+VECTORWAVE_VECTORIZER=huggingface    # Free, runs locally (default)
+# VECTORWAVE_VECTORIZER=openai_client  # Higher quality, requires API key
+
+# OpenAI (required for openai_client vectorizer, self-healing, and RAG)
+OPENAI_API_KEY=sk-...
+
+# Weaviate connection (optional, defaults shown)
+WEAVIATE_URL=http://localhost:8080
+```
+
+### Vectorizer Options
+
+| Vectorizer | Cost | Quality | Speed | Setup |
+|---|---|---|---|---|
+| `huggingface` | Free | Good | Local CPU/GPU | No API key needed |
+| `openai_client` | $0.0001/1K tokens | Excellent | API call | Requires `OPENAI_API_KEY` |
+
+## 4. Initialize Database
+
+Before first use, initialize the Weaviate collections:
+
+```python
+from vectorwave import initialize_database
+
+initialize_database()
+```
+
+This creates two collections in Weaviate:
+
+- `VectorWaveFunctions` — Stores function metadata (source code, descriptions, module paths)
+- `VectorWaveExecutions` — Stores execution logs (inputs, outputs, errors, embeddings)
+
+### Schema Migration
+
+If you upgrade VectorWave and the schema changes, use:
+
+```python
+from vectorwave import update_database_schema
+
+update_database_schema()
+```
+
+This performs zero-downtime migration — existing data is preserved.
+
+## 5. Verify Installation
+
+```python
+from vectorwave import vectorize, initialize_database
+
+initialize_database()
+
+@vectorize(auto=True)
+def hello(name: str):
+    return f"Hello, {name}!"
+
+result = hello("World")
+print(result)  # "Hello, World!"
+```
+
+If this runs without errors, VectorWave is ready. Check your Weaviate console at `http://localhost:8080/v1/meta` to verify the connection.
+
+## Troubleshooting
+
+### Weaviate connection refused
+
+```
+ConnectionError: Connection to Weaviate failed
+```
+
+Make sure Docker is running and Weaviate is accessible:
+
+```bash
+curl http://localhost:8080/v1/meta
+```
+
+### Module not found
+
+```
+ModuleNotFoundError: No module named 'vectorwave'
+```
+
+Ensure you're using the correct Python environment:
+
+```bash
+pip show vectorwave
+```
+
+## Next Steps
+
+- [@vectorize Core](/docs/vectorwave-core) — Learn the core decorator
+- [Semantic Caching](/docs/vectorwave-caching) — Enable caching for cost savings
+- [Quick Start](/docs/quickstart) — Full end-to-end walkthrough

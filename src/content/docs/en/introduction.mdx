@@ -1,0 +1,107 @@
+---
+title: Introduction
+description: What is cozymori and why should you use it?
+order: 1
+category: Getting Started
+---
+
+## Welcome to cozymori
+
+cozymori is an organization building open-source AI observability tools. Our mission is to make monitoring, caching, and healing AI functions feel intuitive and — dare we say — cozy.
+
+## Ecosystem
+
+### VectorWave
+
+A decorator-based Python framework that vectorizes function calls and stores them in Weaviate. VectorWave provides semantic caching, self-healing, distributed tracing, and drift detection for AI/LLM applications.
+
+```bash
+pip install vectorwave
+```
+
+**Key features:**
+- `@vectorize` decorator for tracing and caching any function
+- Semantic caching — similar inputs return cached results instantly
+- Self-healing — AI analyzes errors, generates fixes, opens GitHub PRs
+- Distributed tracing with trace_id/span_id hierarchy
+- Semantic drift detection with webhook alerts
+- RAG-powered code Q&A over your codebase
+- Rust-accelerated batch writing via PyO3
+
+### VectorSurfer
+
+A full-stack observability dashboard for VectorWave. Built with Next.js 16 + FastAPI, VectorSurfer provides real-time monitoring, trace visualization, AI-powered error diagnosis, and replay testing.
+
+```bash
+git clone https://github.com/Cozymori/VectorSurfer
+cd VectorSurfer && npm run dev
+```
+
+**Key features:**
+- Bento grid dashboard with drag-and-drop widgets
+- Distributed trace waterfall visualization
+- AI Healer — GPT-4 powered error diagnosis (single and batch)
+- Replay testing with exact match and semantic comparison
+- Hybrid semantic search + RAG Q&A
+- Multi-language UI (English, Japanese, Korean)
+
+### VectorSurferSTL
+
+A lightweight Streamlit-based alternative to VectorSurfer. Same core monitoring features in a single-process Python app — ideal for quick setups and local development.
+
+```bash
+git clone https://github.com/Cozymori/VectorSurferSTL
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+### VectorCheck
+
+A CLI regression testing framework for AI/LLM applications. Traditional `assert a == b` fails for generative AI — VectorCheck uses vector similarity and LLM judge evaluation instead.
+
+```bash
+pip install vectorcheck
+
+# Run regression tests
+vw test --target all --semantic --threshold 0.85
+```
+
+**Testing modes:**
+- Exact match — compare outputs literally
+- Vector similarity — compare via embedding cosine similarity
+- LLM Judge — use GPT-4 to evaluate semantic equivalence
+
+## Architecture
+
+```
+┌──────────────────────────────────────────┐
+│              VectorWave                   │
+│  (Core SDK — traces, caches, heals)      │
+│  Stores execution data in Weaviate       │
+└──────────┬───────────┬───────────┬───────┘
+           │           │           │
+           v           v           v
+┌──────────┐ ┌────────────┐ ┌───────────┐
+│VectorSurfer│ │VectorSurfer│ │VectorCheck│
+│(Next.js +  │ │STL         │ │(CLI Test  │
+│ FastAPI)   │ │(Streamlit) │ │ Framework)│
+└────────────┘ └────────────┘ └───────────┘
+```
+
+## Philosophy
+
+- **Developer First** — APIs designed by developers, for developers
+- **Zero Bloat** — One decorator does it all, no configuration bloat
+- **Python Native** — Built for the Python AI ecosystem with Rust for performance
+- **Open Source** — MIT licensed, community-driven
+
+## Requirements
+
+- Python 3.10 — 3.13
+- Docker (for Weaviate vector database)
+- OpenAI API key (for self-healing and RAG features)
+
+## Next Steps
+
+- Read the [Quick Start](/docs/quickstart) guide to get up and running
+- Explore the [VectorWave](/vectorwave) and [VectorSurfer](/vectorsurf) product pages
