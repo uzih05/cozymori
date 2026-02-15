@@ -30,12 +30,12 @@ export default function VectorSurfPage() {
 
         <div className="relative z-10 mx-auto max-w-4xl px-6 lg:px-8 text-center">
           <ScrollReveal>
-            <span className="inline-block px-4 py-1.5 rounded-full border border-violet/20 bg-violet/5 text-xs font-semibold text-violet tracking-wider uppercase mb-6">
+            <span className="inline-block px-4 py-1.5 rounded-full border border-violet/30 bg-violet/10 text-xs font-semibold text-violet tracking-wider uppercase mb-6">
               {t('badge')}
             </span>
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
-            <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl font-bold tracking-tighter-custom leading-[0.95] mb-6">
+            <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl font-bold tracking-tighter-custom leading-[0.95] mb-6 text-balance">
               <span className="gradient-text-violet">{t('heroTitle1')}</span>
               <br />
               <span className="text-text-primary">{t('heroTitle2')}</span>
@@ -52,17 +52,17 @@ export default function VectorSurfPage() {
                 href="https://test3-six-rose.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-colors duration-200"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-all duration-200 shadow-[0_0_24px_rgba(139,92,246,0.4)] hover:shadow-[0_0_32px_rgba(139,92,246,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
               >
                 {t('openDashboard')}
-                <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </a>
               <Link
                 href="/docs"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl glass-card text-text-secondary hover:text-text-primary font-semibold text-sm transition-colors duration-200"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl glass-card text-text-secondary hover:text-text-primary font-semibold text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
               >
                 {t('viewDocs')}
-                <ArrowRight size={16} />
+                <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
           </ScrollReveal>
@@ -70,7 +70,7 @@ export default function VectorSurfPage() {
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none">
-          <ChevronDown size={20} className="text-text-tertiary/40 animate-bounce-down" />
+          <ChevronDown size={20} aria-hidden="true" className="text-text-tertiary/40 animate-bounce-down" />
         </div>
       </section>
 
@@ -79,7 +79,7 @@ export default function VectorSurfPage() {
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <ScrollReveal>
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter-custom text-text-primary leading-tight">
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter-custom text-text-primary leading-tight text-balance">
                 {t('dashboardTitle')}
               </h2>
               <p className="mt-4 text-base text-text-secondary max-w-xl mx-auto">
@@ -100,7 +100,7 @@ export default function VectorSurfPage() {
       </section>
 
       <div className="mx-auto max-w-3xl px-6 lg:px-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-violet/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-violet/40 to-transparent" />
       </div>
 
       {/* ── Section 3: Trace ────────────────────────────── */}
@@ -112,7 +112,7 @@ export default function VectorSurfPage() {
                 <span className="inline-block font-heading text-sm font-semibold tracking-wider uppercase mb-4 text-violet">
                   {t('traceBadge')}
                 </span>
-                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tighter-custom text-text-primary leading-tight mb-5">
+                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tighter-custom text-text-primary leading-tight mb-5 text-balance">
                   {t('traceTitle')}
                 </h2>
                 <p className="text-base text-text-secondary leading-relaxed max-w-md">
@@ -130,7 +130,7 @@ export default function VectorSurfPage() {
       </section>
 
       <div className="mx-auto max-w-3xl px-6 lg:px-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-violet/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-violet/40 to-transparent" />
       </div>
 
       {/* ── Section 4: Healer ───────────────────────────── */}
@@ -147,7 +147,7 @@ export default function VectorSurfPage() {
                 <span className="inline-block font-heading text-sm font-semibold tracking-wider uppercase mb-4 text-violet">
                   {t('healerBadge')}
                 </span>
-                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tighter-custom text-text-primary leading-tight mb-5">
+                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tighter-custom text-text-primary leading-tight mb-5 text-balance">
                   {t('healerTitle')}
                 </h2>
                 <p className="text-base text-text-secondary leading-relaxed max-w-md">
@@ -160,7 +160,7 @@ export default function VectorSurfPage() {
       </section>
 
       <div className="mx-auto max-w-3xl px-6 lg:px-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-violet/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-violet/40 to-transparent" />
       </div>
 
       {/* ── Section 5: Analysis ─────────────────────────── */}
@@ -168,7 +168,7 @@ export default function VectorSurfPage() {
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <ScrollReveal>
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter-custom text-text-primary leading-tight">
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter-custom text-text-primary leading-tight text-balance">
                 {t('analysisTitle')}
               </h2>
               <p className="mt-4 text-base text-text-secondary max-w-xl mx-auto">
@@ -195,7 +195,7 @@ export default function VectorSurfPage() {
       </section>
 
       <div className="mx-auto max-w-3xl px-6 lg:px-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-violet/20 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-violet/40 to-transparent" />
       </div>
 
       {/* ── Section 6: VectorWave Integration ───────────── */}
@@ -205,7 +205,7 @@ export default function VectorSurfPage() {
             <span className="inline-block font-heading text-sm font-semibold tracking-wider uppercase mb-4 text-cyan">
               VectorWave
             </span>
-            <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tighter-custom text-text-primary leading-tight mb-5">
+            <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tighter-custom text-text-primary leading-tight mb-5 text-balance">
               {t('vectorwaveTitle')}
             </h2>
             <p className="text-base text-text-secondary leading-relaxed mb-8">
@@ -213,10 +213,10 @@ export default function VectorSurfPage() {
             </p>
             <Link
               href="/vectorwave"
-              className="group inline-flex items-center gap-2 text-sm font-semibold text-cyan hover:text-cyan/80 transition-colors duration-200"
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-cyan hover:text-cyan/80 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary rounded-lg"
             >
               {t('vectorwaveLink')}
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              <ArrowRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
             </Link>
           </ScrollReveal>
         </div>
@@ -230,7 +230,7 @@ export default function VectorSurfPage() {
 
         <div className="relative z-10 mx-auto max-w-3xl px-6 lg:px-8 text-center">
           <ScrollReveal>
-            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter-custom text-text-primary leading-tight">
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter-custom text-text-primary leading-tight text-balance">
               {t('ctaTitle')}
             </h2>
           </ScrollReveal>
@@ -245,17 +245,17 @@ export default function VectorSurfPage() {
                 href="https://test3-six-rose.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-colors duration-200"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-all duration-200 shadow-[0_0_24px_rgba(139,92,246,0.4)] hover:shadow-[0_0_32px_rgba(139,92,246,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
               >
                 {t('ctaButton')}
-                <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </a>
               <Link
                 href="/docs"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl glass-card text-text-secondary hover:text-text-primary font-semibold text-sm transition-colors duration-200"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl glass-card text-text-secondary hover:text-text-primary font-semibold text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
               >
                 {t('ctaDocs')}
-                <ArrowRight size={16} />
+                <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
           </ScrollReveal>

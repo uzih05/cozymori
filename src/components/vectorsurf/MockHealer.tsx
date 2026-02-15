@@ -24,6 +24,15 @@ function useTyping(text: string, enabled: boolean, speed: number = 20, delay: nu
 
   useEffect(() => {
     if (!enabled) return;
+
+    // Skip animation for users who prefer reduced motion
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      setDisplayed(text);
+      setDone(true);
+      return;
+    }
+
     let idx = 0;
     setDisplayed('');
     setDone(false);
@@ -60,7 +69,7 @@ export default function MockHealer() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-[rgba(223,255,0,0.12)] flex items-center justify-center">
-          <Sparkles size={16} color="#DFFF00" />
+          <Sparkles size={16} color="#DFFF00" aria-hidden="true" />
         </div>
         <div>
           <span className="text-xs font-semibold text-[#DFFF00]">AI Healer</span>
@@ -82,8 +91,8 @@ export default function MockHealer() {
         <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-semibold text-[#666] uppercase tracking-wider">Suggested Fix</p>
           {fix.done && (
-            <button className="text-[#444] hover:text-[#666] transition-colors">
-              <Copy size={12} />
+            <button aria-label="Copy suggested fix" className="text-[#444] hover:text-[#666] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet rounded">
+              <Copy size={12} aria-hidden="true" />
             </button>
           )}
         </div>

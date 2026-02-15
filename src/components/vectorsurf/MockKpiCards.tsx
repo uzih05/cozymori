@@ -42,7 +42,6 @@ function CountUp({ target, format, color }: { target: number; format: KpiItem['f
     if (!inView) return;
     const duration = 2000;
     const steps = 60;
-    const increment = target / steps;
     let step = 0;
 
     const timer = setInterval(() => {
@@ -83,7 +82,7 @@ export default function MockKpiCards() {
             className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: kpi.dimBg }}
           >
-            <kpi.icon size={16} style={{ color: kpi.color }} />
+            <kpi.icon size={16} aria-hidden="true" style={{ color: kpi.color }} />
           </div>
           <div>
             <CountUp target={kpi.value} format={kpi.format} color={kpi.color} />

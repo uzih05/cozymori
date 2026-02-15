@@ -317,7 +317,7 @@ body {
 }
 
 .gradient-text-violet {
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa, #8b5cf6);
+  background: linear-gradient(135deg, #a78bfa, #c4b5fd, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
