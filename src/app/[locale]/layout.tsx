@@ -1,4 +1,5 @@
 import '@/app/globals.css';
+import { GeistSans } from 'geist/font/sans';
 import { hasLocale } from 'next-intl';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -69,7 +70,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} style={{ colorScheme: 'dark' }} suppressHydrationWarning>
+    <html lang={locale} className={GeistSans.variable} style={{ colorScheme: 'dark' }} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
       </head>
