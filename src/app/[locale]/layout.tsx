@@ -1,3 +1,4 @@
+import '@/app/globals.css';
 import { hasLocale } from 'next-intl';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -52,6 +53,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: t('title'),
       description: t('description'),
     },
+    other: {
+      'theme-color': '#050506',
+    },
   };
 }
 
@@ -65,14 +69,21 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <NextIntlClientProvider>
-      <LenisProvider>
-        <NoiseOverlay />
-        <FloatingNav />
-        <LocaleToggle />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
-      </LenisProvider>
-    </NextIntlClientProvider>
+    <html lang={locale} style={{ colorScheme: 'dark' }} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+      </head>
+      <body className="antialiased bg-bg-primary text-text-primary font-body">
+        <NextIntlClientProvider>
+          <LenisProvider>
+            <NoiseOverlay />
+            <FloatingNav />
+            <LocaleToggle />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+          </LenisProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

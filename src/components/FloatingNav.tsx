@@ -114,7 +114,7 @@ export default function FloatingNav() {
                       <Link
                         href={link.href}
                         onClick={() => setOpen(false)}
-                        className={`block px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                        className={`block px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
                           isActive
                             ? 'bg-white/8 font-medium'
                             : 'hover:bg-white/5'
@@ -167,7 +167,7 @@ export default function FloatingNav() {
                     href="https://github.com/cozymori"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block px-3 py-2 rounded-lg text-sm text-text-tertiary hover:text-text-secondary hover:bg-white/5 transition-all duration-200"
+                    className="block px-3 py-2 rounded-lg text-sm text-text-tertiary hover:text-text-secondary hover:bg-white/5 transition-colors duration-200"
                   >
                     GitHub ↗
                   </a>

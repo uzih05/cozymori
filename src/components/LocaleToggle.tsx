@@ -22,7 +22,7 @@ export default function LocaleToggle() {
     <button
       onClick={handleSwitch}
       disabled={isPending}
-      className={`fixed top-6 right-6 z-50 px-3 py-1.5 rounded-full glass-card border border-glass-border hover:border-glass-border-hover text-xs font-medium text-text-tertiary hover:text-text-secondary transition-all duration-200 shadow-lg shadow-black/20 ${
+      className={`fixed top-6 right-6 z-50 px-3 py-1.5 rounded-full glass-card border border-glass-border hover:border-glass-border-hover text-xs font-medium text-text-tertiary hover:text-text-secondary transition-[color,border-color,opacity] duration-200 shadow-lg shadow-black/20 ${
         isPending ? 'opacity-50' : ''
       }`}
       aria-label={`Switch to ${nextLocale === 'ko' ? '한국어' : 'English'}`}

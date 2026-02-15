@@ -51,7 +51,7 @@ export default async function DocsIndex({ params }: Props) {
                   <Link
                     key={doc.slug}
                     href={`/docs/${doc.slug}`}
-                    className="group glass-card rounded-xl p-5 hover:border-glass-border-hover transition-all duration-200"
+                    className="group glass-card rounded-xl p-5 hover:border-glass-border-hover transition-[border-color] duration-200"
                   >
                     <h3 className="font-heading text-base font-semibold text-text-primary mb-1 flex items-center gap-2">
                       {doc.title}

@@ -107,7 +107,7 @@ export default function Home() {
                   </p>
                   <Link
                     href="/vectorwave"
-                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl border border-cyan/20 bg-cyan/5 text-sm font-semibold text-cyan hover:bg-cyan/10 hover:border-cyan/30 transition-all duration-200"
+                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl border border-cyan/20 bg-cyan/5 text-sm font-semibold text-cyan hover:bg-cyan/10 hover:border-cyan/30 transition-colors duration-200"
                   >
                     {tProjects('vectorwave.cta')}
                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -163,7 +163,7 @@ export default function Home() {
                   </p>
                   <Link
                     href="/vectorsurf"
-                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl border border-violet/20 bg-violet/5 text-sm font-semibold text-violet hover:bg-violet/10 hover:border-violet/30 transition-all duration-200"
+                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl border border-violet/20 bg-violet/5 text-sm font-semibold text-violet hover:bg-violet/10 hover:border-violet/30 transition-colors duration-200"
                   >
                     {tProjects('vectorsurf.cta')}
                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -329,7 +329,7 @@ export default function Home() {
                 href="https://github.com/cozymori"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl glass-card text-text-secondary hover:text-text-primary font-semibold text-sm transition-all duration-200"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl glass-card text-text-secondary hover:text-text-primary font-semibold text-sm transition-colors duration-200"
               >
                 {tCta('github')}
                 <ArrowUpRight size={14} />

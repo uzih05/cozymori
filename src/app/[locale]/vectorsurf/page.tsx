@@ -120,7 +120,7 @@ export default function VectorSurferPage() {
             >
               <Link
                 href="/docs"
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-glow"
+                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-colors duration-200 shadow-lg shadow-violet-glow"
               >
                 {t('getStarted')}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -129,7 +129,7 @@ export default function VectorSurferPage() {
                 href="https://github.com/Cozymori/VectorSurfer"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass-card text-text-secondary hover:text-text-primary font-medium text-sm transition-all duration-200"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass-card text-text-secondary hover:text-text-primary font-medium text-sm transition-colors duration-200"
               >
                 {t('sourceCode')}
               </a>
@@ -144,7 +144,7 @@ export default function VectorSurferPage() {
           transition={{ delay: 1.2, duration: 0.8 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1"
         >
-          <span className="text-[10px] uppercase tracking-widest text-text-tertiary">Scroll</span>
+          <span className="text-[10px] uppercase tracking-widest text-text-tertiary" aria-hidden="true">Scroll</span>
           <ChevronDown size={16} className="text-text-tertiary animate-bounce-down" />
         </motion.div>
       </section>
@@ -257,7 +257,7 @@ export default function VectorSurferPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {features.slice(0, 2).map((feature, i) => (
               <ScrollReveal key={feature.title} delay={i * 0.1}>
-                <GlowCard className="p-8 h-full group transition-all duration-300 card-accent-bar-violet bg-violet/[0.03]">
+                <GlowCard className="p-8 h-full group transition-[border-color,box-shadow] duration-300 card-accent-bar-violet bg-violet/[0.03]">
                   <div className="w-12 h-12 rounded-xl bg-violet/10 flex items-center justify-center mb-5 text-violet transition-transform duration-300 group-hover:scale-110">
                     {feature.icon}
                   </div>
@@ -276,7 +276,7 @@ export default function VectorSurferPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.slice(2).map((feature, i) => (
               <ScrollReveal key={feature.title} delay={(i + 2) * 0.1}>
-                <GlowCard className="p-6 h-full group transition-all duration-300 card-accent-bar-violet">
+                <GlowCard className="p-6 h-full group transition-[border-color,box-shadow] duration-300 card-accent-bar-violet">
                   <div className="w-10 h-10 rounded-lg bg-violet/10 flex items-center justify-center mb-4 text-violet transition-transform duration-300 group-hover:scale-110">
                     {feature.icon}
                   </div>
@@ -307,7 +307,7 @@ export default function VectorSurferPage() {
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 text-center">
           <ScrollReveal>
             <h2 className="font-heading text-4xl sm:text-5xl font-bold tracking-tighter-custom text-text-primary mb-6">
-              Launch the <span className="gradient-text-violet">dashboard</span>
+              {t('ctaTitle')}
             </h2>
             <p className="text-base text-text-secondary max-w-md mx-auto mb-10">
               {t('ctaDescription')}
@@ -329,17 +329,17 @@ export default function VectorSurferPage() {
             <div className="flex items-center justify-center gap-4">
               <Link
                 href="/docs"
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-violet/20 bg-violet/5 text-sm font-semibold text-violet hover:bg-violet/10 hover:border-violet/30 transition-all duration-200"
+                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-violet/20 bg-violet/5 text-sm font-semibold text-violet hover:bg-violet/10 hover:border-violet/30 transition-colors duration-200"
               >
                 <BookOpen size={16} />
-                Documentation
+                {t('getStarted')}
                 <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <a
                 href="https://github.com/Cozymori/VectorSurfer"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass-card text-text-secondary hover:text-text-primary font-medium text-sm transition-all duration-200"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass-card text-text-secondary hover:text-text-primary font-medium text-sm transition-colors duration-200"
               >
                 GitHub
               </a>
