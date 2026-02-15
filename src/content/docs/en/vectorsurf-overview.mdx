@@ -1,49 +1,37 @@
 ---
 title: VectorSurfer Overview
-description: Full-stack AI observability dashboard for VectorWave data.
+description: AI observability dashboard — monitor, trace, and heal your AI functions.
 order: 20
 category: VectorSurfer
 ---
 
 ## What is VectorSurfer?
 
-**VectorSurfer** is a full-stack observability dashboard for monitoring all your [VectorWave](/docs/vectorwave-overview) data in real-time. Built with **Next.js 16 + FastAPI**, it provides visual tools for everything VectorWave captures.
+**VectorSurfer** is a real-time AI observability dashboard. It connects to your [VectorWave](/docs/vectorwave-overview) data and provides visual tools for monitoring, tracing, and healing AI function calls.
 
 ```
-┌─────────────────────────────────────────┐
-│            VectorSurfer                  │
-│                                          │
-│  ┌──────────┐       ┌───────────────┐   │
-│  │ Next.js  │ ←───→ │   FastAPI     │   │
-│  │ Frontend │       │   Backend     │   │
-│  │          │       │               │   │
-│  │ • UI     │       │ • Weaviate    │   │
-│  │ • Charts │       │ • OpenAI API  │   │
-│  │ • i18n   │       │ • PyGithub    │   │
-│  └──────────┘       └───────────────┘   │
-│                          │               │
-│                     Weaviate             │
-│               (Shared with VectorWave)   │
-└─────────────────────────────────────────┘
+Your App + @vectorize → Weaviate ← VectorSurfer Dashboard
 ```
+
+VectorWave captures function executions, and VectorSurfer turns that data into actionable insights — all in one unified interface.
 
 ## Key Features
 
-### Bento Grid Dashboard
+### Real-Time Dashboard
 
-Drag-and-drop responsive dashboard with widgets:
+A responsive card-based dashboard that shows all key metrics at a glance:
 
 - **KPI Cards** — Total calls, success rate, average latency, cache hit rate
-- **Execution Timeline** — Real-time chart of function executions over time
-- **Error Distribution** — Breakdown of error types and frequencies
+- **Execution Timeline** — Function executions over time with success/error/cache breakdown
+- **Error Distribution** — Error types and frequencies
 - **Drift Monitor** — Visual distance from Golden Dataset centroid
 
 ### Trace Waterfall
 
-Visualize distributed traces as an interactive waterfall diagram:
+Visualize distributed traces as interactive waterfall diagrams:
 
-- See the full call chain of `@vectorize` + `@trace_span` functions
-- Identify bottlenecks and slow spans at a glance
+- See the full call chain of decorated functions
+- Identify bottlenecks and slow spans instantly
 - Click into any span for detailed execution data
 - Color-coded by status (success, error, cached)
 
@@ -52,68 +40,47 @@ Visualize distributed traces as an interactive waterfall diagram:
 GPT-4 powered error diagnosis with a visual interface:
 
 - Browse recent errors with full context
-- One-click diagnosis via [VectorWaveHealer](/docs/vectorwave-healing)
+- One-click root cause analysis
 - View generated code fixes with diff highlighting
 - Create GitHub PRs directly from the dashboard
 - Batch healing for multiple errors at once
 
 ### Replay Testing
 
-Visual replay testing UI:
+Visual regression testing for AI functions:
 
 - Select functions and Golden Dataset entries
 - Run replays with real-time progress
 - Compare expected vs actual outputs side-by-side
-- Supports both exact match and [semantic comparison](/docs/vectorwave-testing)
+- Supports both exact match and semantic comparison
 
 ### Semantic Search
 
-Natural language search across all VectorWave data:
+Natural language search across all your AI function data:
 
 - Search functions, execution logs, and errors
 - Hybrid search (vector similarity + keyword filtering)
-- Click-through to full execution details
-- Integrated with [RAG Q&A](/docs/vectorwave-search)
+- RAG-powered Q&A for exploring your codebase
 
 ### Multi-Language UI
 
 English, Japanese, and Korean UI out of the box — built for global teams.
 
-## Tech Stack
+## How It Works
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Next.js 16, TypeScript, Tailwind CSS |
-| **Backend** | FastAPI (Python) |
-| **Database** | Weaviate (shared with VectorWave) |
-| **AI** | OpenAI GPT-4 (for AI Healer and RAG) |
-| **Charts** | Recharts / D3 |
-| **i18n** | next-intl |
+VectorSurfer reads from the same Weaviate instance that VectorWave writes to. There is no extra instrumentation needed — just use `@vectorize` in your Python code, and VectorSurfer shows everything.
 
-## Relationship to VectorWave
-
-VectorSurfer is the **companion dashboard** for VectorWave. It reads from the same Weaviate instance that VectorWave writes to:
-
-```
-Your App + @vectorize → Weaviate ← VectorSurfer Dashboard
-```
-
-You don't need VectorSurfer to use VectorWave — the SDK works standalone. But VectorSurfer makes it much easier to:
-
-- Monitor function health in real-time
-- Diagnose errors visually
-- Manage Golden Datasets
-- Run replay tests
+VectorWave is not required to use VectorSurfer, but the SDK is what generates the data the dashboard displays.
 
 ## Alternatives
 
-| Dashboard | Type | Best For |
-|---|---|---|
-| **VectorSurfer** | Full-stack (Next.js + FastAPI) | Production, teams |
-| **[VectorSurferSTL](/docs/vectorsurferstl)** | Lightweight (Streamlit) | Quick setup, local dev |
+| Dashboard | Best For |
+|---|---|
+| **VectorSurfer** | Production, teams, full-featured |
+| **[VectorSurferSTL](/docs/vectorsurferstl)** | Quick setup, local dev, Python-only |
 
 ## Next Steps
 
-- [Setup & Installation](/docs/vectorsurf-setup) — Get VectorSurfer running
-- [Features Guide](/docs/vectorsurf-features) — Detailed feature walkthrough
+- [Getting Started](/docs/vectorsurf-setup) — Connect to VectorSurfer
+- [Usage Guide](/docs/vectorsurf-features) — Detailed feature walkthrough
 - [VectorWave Overview](/docs/vectorwave-overview) — The core SDK

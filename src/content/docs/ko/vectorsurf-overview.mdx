@@ -1,49 +1,37 @@
 ---
 title: "VectorSurfer 개요"
-description: "VectorWave 데이터를 위한 풀스택 AI 관측 대시보드."
+description: "AI 관측 대시보드 — AI 함수를 모니터링하고, 추적하고, 치유합니다."
 order: 20
 category: VectorSurfer
 ---
 
 ## VectorSurfer란?
 
-**VectorSurfer**는 [VectorWave](/docs/vectorwave-overview) 데이터를 실시간으로 모니터링하기 위한 풀스택 관측 대시보드입니다. **Next.js 16 + FastAPI** 기반으로, VectorWave가 캡처하는 모든 데이터에 대한 시각적 도구를 제공합니다.
+**VectorSurfer**는 실시간 AI 관측 대시보드입니다. [VectorWave](/docs/vectorwave-overview) 데이터에 연결하여 AI 함수 호출을 모니터링, 추적, 치유하기 위한 시각적 도구를 제공합니다.
 
 ```
-┌─────────────────────────────────────────┐
-│            VectorSurfer                  │
-│                                          │
-│  ┌──────────┐       ┌───────────────┐   │
-│  │ Next.js  │ ←───→ │   FastAPI     │   │
-│  │ Frontend │       │   Backend     │   │
-│  │          │       │               │   │
-│  │ • UI     │       │ • Weaviate    │   │
-│  │ • Charts │       │ • OpenAI API  │   │
-│  │ • i18n   │       │ • PyGithub    │   │
-│  └──────────┘       └───────────────┘   │
-│                          │               │
-│                     Weaviate             │
-│               (VectorWave와 공유)        │
-└─────────────────────────────────────────┘
+Your App + @vectorize → Weaviate ← VectorSurfer Dashboard
 ```
+
+VectorWave가 함수 실행을 캡처하면, VectorSurfer가 이 데이터를 실행 가능한 인사이트로 변환합니다 — 하나의 통합 인터페이스에서.
 
 ## 주요 기능
 
-### 벤토 그리드 대시보드
+### 실시간 대시보드
 
-드래그 앤 드롭 반응형 대시보드와 위젯:
+모든 핵심 지표를 한눈에 보여주는 반응형 카드 기반 대시보드:
 
-- **KPI 카드** -- 총 호출 수, 성공률, 평균 지연시간, 캐시 히트율
-- **실행 타임라인** -- 시간별 함수 실행 현황 실시간 차트
-- **에러 분포** -- 에러 유형 및 빈도 분석
-- **드리프트 모니터** -- Golden Dataset 중심점으로부터의 시각적 거리
+- **KPI 카드** — 총 호출 수, 성공률, 평균 지연시간, 캐시 히트율
+- **실행 타임라인** — 성공/에러/캐시 분류가 적용된 시간별 함수 실행 현황
+- **에러 분포** — 에러 유형 및 빈도
+- **드리프트 모니터** — Golden Dataset 중심점으로부터의 시각적 거리
 
 ### 트레이스 워터폴
 
 분산 트레이스를 인터랙티브 워터폴 다이어그램으로 시각화:
 
-- `@vectorize` + `@trace_span` 함수의 전체 호출 체인 확인
-- 병목 구간과 느린 스팬을 한눈에 파악
+- 데코레이팅된 함수의 전체 호출 체인 확인
+- 병목 구간과 느린 스팬을 즉시 파악
 - 스팬을 클릭하면 상세 실행 데이터 확인
 - 상태별 색상 구분 (성공, 에러, 캐시됨)
 
@@ -52,68 +40,47 @@ category: VectorSurfer
 GPT-4 기반 에러 진단을 시각적 인터페이스로 제공:
 
 - 전체 컨텍스트가 포함된 최근 에러 탐색
-- [VectorWaveHealer](/docs/vectorwave-healing)를 통한 원클릭 진단
+- 원클릭 근본 원인 분석
 - diff 하이라이팅이 적용된 생성 코드 수정 확인
 - 대시보드에서 직접 GitHub PR 생성
 - 여러 에러에 대한 배치 치유
 
 ### 리플레이 테스트
 
-시각적 리플레이 테스트 UI:
+AI 함수를 위한 시각적 회귀 테스트:
 
 - 함수 및 Golden Dataset 항목 선택
 - 실시간 진행 상황과 함께 리플레이 실행
 - 예상 출력과 실제 출력을 나란히 비교
-- 정확 일치 및 [시맨틱 비교](/docs/vectorwave-testing) 모두 지원
+- 정확 일치 및 시맨틱 비교 모두 지원
 
 ### 시맨틱 검색
 
-모든 VectorWave 데이터에 대한 자연어 검색:
+모든 AI 함수 데이터에 대한 자연어 검색:
 
 - 함수, 실행 로그, 에러 검색
 - 하이브리드 검색 (벡터 유사도 + 키워드 필터링)
-- 전체 실행 상세 정보로 클릭하여 이동
-- [RAG Q&A](/docs/vectorwave-search)와 통합
+- RAG 기반 Q&A로 코드베이스 탐색
 
 ### 다국어 UI
 
 영어, 일본어, 한국어 UI를 기본 제공하며, 글로벌 팀을 위해 설계되었습니다.
 
-## 기술 스택
+## 동작 방식
 
-| 레이어 | 기술 |
-|---|---|
-| **프론트엔드** | Next.js 16, TypeScript, Tailwind CSS |
-| **백엔드** | FastAPI (Python) |
-| **데이터베이스** | Weaviate (VectorWave와 공유) |
-| **AI** | OpenAI GPT-4 (AI Healer 및 RAG용) |
-| **차트** | Recharts / D3 |
-| **국제화** | next-intl |
+VectorSurfer는 VectorWave가 데이터를 쓰는 동일한 Weaviate 인스턴스에서 데이터를 읽습니다. 추가 설정이 필요 없습니다 — Python 코드에서 `@vectorize`만 사용하면 VectorSurfer가 모든 것을 보여줍니다.
 
-## VectorWave와의 관계
-
-VectorSurfer는 VectorWave의 **동반 대시보드**입니다. VectorWave가 데이터를 쓰는 동일한 Weaviate 인스턴스에서 데이터를 읽습니다:
-
-```
-Your App + @vectorize → Weaviate ← VectorSurfer Dashboard
-```
-
-VectorWave를 사용하기 위해 VectorSurfer가 반드시 필요한 것은 아닙니다 -- SDK는 독립적으로 동작합니다. 하지만 VectorSurfer를 사용하면 다음이 훨씬 쉬워집니다:
-
-- 함수 상태를 실시간으로 모니터링
-- 에러를 시각적으로 진단
-- Golden Dataset 관리
-- 리플레이 테스트 실행
+VectorSurfer를 사용하기 위해 VectorWave가 반드시 필요한 것은 아니지만, SDK가 대시보드에 표시되는 데이터를 생성합니다.
 
 ## 대안 비교
 
-| 대시보드 | 유형 | 적합한 경우 |
-|---|---|---|
-| **VectorSurfer** | 풀스택 (Next.js + FastAPI) | 프로덕션, 팀 |
-| **[VectorSurferSTL](/docs/vectorsurferstl)** | 경량 (Streamlit) | 빠른 세팅, 로컬 개발 |
+| 대시보드 | 적합한 경우 |
+|---|---|
+| **VectorSurfer** | 프로덕션, 팀, 풀 기능 |
+| **[VectorSurferSTL](/docs/vectorsurferstl)** | 빠른 세팅, 로컬 개발, Python만 |
 
 ## 다음 단계
 
-- [설치 및 설정](/docs/vectorsurf-setup) -- VectorSurfer 실행
-- [기능 가이드](/docs/vectorsurf-features) -- 상세 기능 안내
-- [VectorWave 개요](/docs/vectorwave-overview) -- 코어 SDK
+- [시작하기](/docs/vectorsurf-setup) — VectorSurfer 연결
+- [사용 가이드](/docs/vectorsurf-features) — 상세 기능 안내
+- [VectorWave 개요](/docs/vectorwave-overview) — 코어 SDK

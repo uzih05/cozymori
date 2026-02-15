@@ -7,25 +7,24 @@ category: 생태계
 
 ## VectorSurferSTL이란?
 
-**VectorSurferSTL**은 [VectorSurfer](/docs/vectorsurf-overview)의 경량 단일 프로세스 대안입니다. **Streamlit** 기반으로, 훨씬 간단한 설정으로 동일한 핵심 모니터링 기능을 제공합니다 -- Node.js도, FastAPI도 필요 없이 Python만으로 동작합니다.
+**VectorSurferSTL**은 [VectorSurfer](/docs/vectorsurf-overview)의 경량 Python 전용 대안입니다. **Streamlit** 기반으로, 최소한의 설정으로 핵심 모니터링 기능을 제공합니다 — 프론트엔드 빌드 과정이 필요 없습니다.
 
 | 기능 | VectorSurfer | VectorSurferSTL |
 |---|---|---|
-| **스택** | Next.js + FastAPI | Streamlit (Python만) |
-| **설정 시간** | ~5분 | ~1분 |
 | **적합한 경우** | 프로덕션, 팀 | 빠른 세팅, 로컬 개발 |
-| **대시보드** | 벤토 그리드, 드래그 앤 드롭 | Streamlit 위젯 |
+| **설정 시간** | 대시보드 준비됨 | ~1분 |
 | **AI Healer** | 전체 UI | 기본 UI |
 | **다국어** | 영어/일본어/한국어 | 영어만 |
-| **커스터마이징** | 높음 (React 컴포넌트) | 보통 (Streamlit) |
+| **커스터마이징** | 높음 | 보통 |
 
 ## 빠른 시작
 
 ```bash
-git clone https://github.com/Cozymori/VectorSurferSTL
-cd VectorSurferSTL
-pip install -r requirements.txt
-streamlit run app.py
+pip install vectorsurferstl
+```
+
+```bash
+vectorsurferstl
 ```
 
 브라우저에서 `http://localhost:8501`을 엽니다.
@@ -33,22 +32,9 @@ streamlit run app.py
 ## 사전 요구사항
 
 - **Python** 3.10+
-- **Docker** (Weaviate용)
-- **Weaviate**가 `http://localhost:8080`에서 실행 중
+- VectorWave 데이터가 있는 **Weaviate** 실행 중
 
 이미 VectorWave를 위해 Weaviate를 실행하고 있다면, 추가 데이터베이스 설정은 필요 없습니다.
-
-## 환경 설정
-
-프로젝트 루트에 `.env`를 생성합니다:
-
-```bash
-# Weaviate
-WEAVIATE_URL=http://localhost:8080
-
-# OpenAI (AI Healer 및 검색용)
-OPENAI_API_KEY=sk-...
-```
 
 ## 기능
 
@@ -64,7 +50,6 @@ OPENAI_API_KEY=sk-...
 - 모든 추적된 함수 실행 목록
 - 함수 이름, 상태, 날짜 범위로 필터링
 - 실행 상세 정보 확인: 입력, 출력, 에러
-- Trace ID 연결
 
 ### 검색
 
@@ -82,18 +67,15 @@ OPENAI_API_KEY=sk-...
 **VectorSurferSTL을 선택하는 경우:**
 - VectorWave 데이터를 빠르게 시각적으로 확인하고 싶을 때
 - 로컬에서 개발 중이고 최소한의 설정을 원할 때
-- 프로젝트의 유일한 개발자일 때
 - 올 Python 스택을 선호할 때
 
 **VectorSurfer를 선택하는 경우:**
 - 프로덕션 환경에서 운영할 때
 - 여러 팀원이 접근해야 할 때
-- 전체 벤토 그리드 대시보드가 필요할 때
-- 다국어 지원이 필요할 때
-- 고급 기능이 필요할 때 (트레이스 워터폴, 배치 치유, Golden Dataset 관리)
+- 고급 기능이 필요할 때 (트레이스 워터폴, 배치 치유, 리플레이 테스트)
 
 ## 다음 단계
 
-- [VectorSurfer](/docs/vectorsurf-overview) -- 풀스택 대시보드
-- [VectorWave 개요](/docs/vectorwave-overview) -- 코어 SDK
-- [빠른 시작](/docs/quickstart) -- VectorWave 시작하기
+- [VectorSurfer](/docs/vectorsurf-overview) — 풀 기능 대시보드
+- [VectorWave 개요](/docs/vectorwave-overview) — 코어 SDK
+- [빠른 시작](/docs/quickstart) — VectorWave 시작하기
