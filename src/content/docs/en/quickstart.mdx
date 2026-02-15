@@ -7,7 +7,7 @@ category: Getting Started
 
 ## Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10 — 3.13
 - Docker (to run Weaviate)
 
 ## 1. Start Weaviate
@@ -21,6 +21,8 @@ docker run -d \
   -p 50051:50051 \
   cr.weaviate.io/semitechnologies/weaviate:latest
 ```
+
+> For production deployments, consider [Weaviate Cloud (WCS)](https://console.weaviate.cloud/) — a fully managed Weaviate instance.
 
 ## 2. Install VectorWave
 
@@ -41,7 +43,7 @@ initialize_database()
     semantic_cache=True,
     cache_threshold=0.95,
     capture_return_value=True,
-    team="my-team"
+    team="my-team"  # custom tag
 )
 async def generate_response(query: str):
     # Your LLM call here
@@ -55,14 +57,27 @@ That's it. Every call to `generate_response` is now:
 
 ## 4. Self-Healing (Optional)
 
-When errors happen, let AI diagnose and fix them:
+Self-healing requires environment variables in your `.env`:
+
+```bash
+# Required for diagnosis
+OPENAI_API_KEY=sk-...
+
+# Required for auto-PR (optional)
+GITHUB_TOKEN=ghp_...
+GITHUB_REPO=org/repo-name
+```
+
+### On-Demand Healing
+
+Call `VectorWaveHealer` to diagnose errors when needed:
 
 ```python
 from vectorwave import VectorWaveHealer
 
 healer = VectorWaveHealer(model="gpt-4-turbo")
 
-# Diagnose recent errors and open a GitHub PR with the fix
+# Diagnose recent errors for a specific function
 result = healer.diagnose_and_heal(
     function_name="generate_response",
     lookback_minutes=60,
@@ -70,15 +85,35 @@ result = healer.diagnose_and_heal(
 )
 ```
 
-The healer:
-1. Searches Weaviate for the function definition and recent error logs
-2. Constructs a prompt with full context for GPT-4
-3. Uses AST parsing to patch the source file
-4. Creates a branch and opens a GitHub PR via PyGithub
+### Scheduled Healing (AutoHealerBot)
 
-## 5. Drift Detection (Optional)
+VectorWave includes a built-in scheduler that automatically scans for errors and creates fix PRs:
 
-Monitor when inputs start drifting from known-good data:
+```python
+from vectorwave.utils.scheduler import start_scheduler
+import threading
+
+# Start the auto-healer in a background thread
+# Scans every 5 minutes, with 60-minute cooldown per function
+scheduler_thread = threading.Thread(
+    target=start_scheduler,
+    args=(5,),  # check interval in minutes
+    daemon=True
+)
+scheduler_thread.start()
+```
+
+The `AutoHealerBot` automatically:
+- Scans for `ERROR` status executions in the last 60 minutes
+- Deduplicates by function name
+- Skips functions in cooldown (60 min after last PR)
+- Skips errors listed in `.vtwignore` (marked as `FAILURE`, not `ERROR`)
+
+> **VectorSurfer**: Error diagnosis is also available through the [VectorSurfer dashboard](/vectorsurf) with a visual interface — browse errors, view diagnoses, and create PRs with one click.
+
+## 5. Golden Dataset (Optional)
+
+Promote verified executions to your Golden Dataset for better caching and drift detection:
 
 ```python
 from vectorwave import VectorWaveDatasetManager
@@ -99,36 +134,56 @@ candidates = dm.recommend_candidates(
 )
 ```
 
-When new inputs exceed the drift threshold from your Golden Dataset centroid, VectorWave sends a webhook alert (Discord, Slack, etc.).
+Golden data is prioritized in semantic caching — when a cache hit matches golden data, it's returned first. It also serves as the baseline for [drift detection](/docs/vectorwave-drift).
 
-## 6. Launch the Dashboard
+> **VectorSurfer**: Golden Dataset management is built into the [VectorSurfer dashboard](/vectorsurf) — browse, promote, and manage golden entries visually.
 
-### VectorSurfer (Full-stack)
+## 6. Drift Detection (Optional)
 
-```bash
-git clone https://github.com/Cozymori/VectorSurfer
-cd VectorSurfer
-npm install
-npm run dev  # Starts Next.js + FastAPI concurrently
-```
+Monitor when inputs start drifting from known-good data. When new inputs exceed the drift threshold from your Golden Dataset centroid, VectorWave sends a webhook alert (Discord, Slack, etc.).
 
-Open `http://localhost:3000` to see:
+See [Drift Detection](/docs/vectorwave-drift) for setup and configuration.
+
+## 7. Launch the Dashboard
+
+### VectorSurfer
+
+Open the VectorSurfer dashboard to monitor all your AI functions:
+
+**[Open Dashboard →](https://test3-six-rose.vercel.app)**
+
+Features include:
 - Real-time KPI cards (executions, success rate, avg duration)
 - Execution timeline charts
 - Distributed trace waterfall
 - AI-powered error diagnosis
-- Replay testing UI
+- Golden Dataset management
+
+See [VectorSurfer docs](/docs/vectorsurf-overview) for details.
 
 ### VectorSurferSTL (Lightweight)
 
+For a lightweight Python-only alternative:
+
 ```bash
-git clone https://github.com/Cozymori/VectorSurferSTL
-cd VectorSurferSTL
-pip install -r requirements.txt
-streamlit run app.py
+pip install vectorsurferstl
+vectorsurferstl
 ```
 
-## 7. Regression Testing with VectorCheck
+## 8. Error Suppression with .vtwignore (Optional)
+
+Create a `.vtwignore` file in your project root to exclude specific error types from healing and alerts:
+
+```
+# Ignore expected exceptions
+ValueError
+KeyError
+DeprecationWarning
+```
+
+Errors matching these codes are marked as `FAILURE` instead of `ERROR` — the AutoHealerBot skips them, and no webhook alerts are sent.
+
+## 9. Regression Testing with VectorCheck
 
 ```bash
 pip install vectorcheck
@@ -151,7 +206,9 @@ vw export --target my_module.my_function --output data.jsonl
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | For caching/healing | OpenAI API key for embeddings and LLM features |
 | `WEAVIATE_URL` | No | Weaviate URL (default: `http://localhost:8080`) |
-| `VECTORWAVE_VECTORIZER` | No | `openai` or `huggingface` (default: `huggingface`) |
+| `VECTORWAVE_VECTORIZER` | No | `openai_client` or `huggingface` (default: `huggingface`) |
+| `GITHUB_TOKEN` | For auto-PR | GitHub token for self-healing PR creation |
+| `GITHUB_REPO` | For auto-PR | Target repository (e.g. `org/repo-name`) |
 
 ### @vectorize Options
 
@@ -164,7 +221,7 @@ vw export --target my_module.my_function --output data.jsonl
 | `replay` | bool | `False` | Enable replay-based regression testing |
 | `auto` | bool | `False` | Auto-generate metadata via LLM |
 | `search_description` | str | `None` | Description for vector search |
-| `team` | str | `None` | Team tag for filtering |
+| `**execution_tags` | any | — | Custom tags defined in `.weaviate_properties` (e.g. `team="ml-team"`) |
 
 ## What's Next?
 

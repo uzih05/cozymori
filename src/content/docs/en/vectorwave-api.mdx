@@ -1,7 +1,7 @@
 ---
 title: API Reference
 description: Complete reference for @vectorize options, environment variables, and utility classes.
-order: 19
+order: 20
 category: VectorWave
 ---
 
@@ -11,15 +11,16 @@ category: VectorWave
 |---|---|---|---|
 | `semantic_cache` | `bool` | `False` | Enable semantic caching for similar inputs |
 | `cache_threshold` | `float` | `0.9` | Cosine similarity threshold for cache hits (0.0 — 1.0) |
-| `semantic_cache_scope` | `str` | `None` | Cache isolation scope (project/user level multi-tenancy) |
+| `semantic_cache_filters` | `Dict` | `None` | Static filters for semantic cache lookups |
+| `semantic_cache_scope` | `List[str]` | `None` | Function parameter names to use as dynamic cache filters |
 | `capture_return_value` | `bool` | `False` | Store function return values in Weaviate |
 | `capture_inputs` | `bool` | `False` | Auto-capture all function parameters |
+| `attributes_to_capture` | `List[str]` | `None` | Specific attributes to log |
 | `replay` | `bool` | `False` | Enable replay-based regression testing |
 | `auto` | `bool` | `False` | Auto-generate function descriptions via LLM |
 | `search_description` | `str` | `None` | Custom description for vector search optimization |
-| `team` | `str` | `None` | Team tag for filtering and access control |
-| `tags` | `dict` | `None` | Key-value metadata tags for execution tagging |
-| `drift_threshold` | `float` | `0.25` | Semantic drift detection threshold |
+| `sequence_narrative` | `str` | `None` | Story/narrative for context understanding |
+| `**execution_tags` | `kwargs` | — | Custom tags defined in `.weaviate_properties` (e.g. `team="ml-team"`) |
 
 ### Usage
 
@@ -31,9 +32,7 @@ category: VectorWave
     capture_inputs=True,
     replay=True,
     auto=True,
-    team="ml-team",
-    tags={"env": "production"},
-    drift_threshold=0.20,
+    team="ml-team",  # custom tag (defined in .weaviate_properties)
 )
 async def generate_response(query: str):
     return await llm.complete(query)
@@ -68,7 +67,7 @@ No parameters — automatically inherits `trace_id` from the parent `@vectorize`
 
 ### initialize_database()
 
-Creates Weaviate collections. Must be called once before first use.
+Creates four Weaviate collections (`VectorWaveFunctions`, `VectorWaveExecutions`, `VectorWaveGoldenDataset`, `VectorWaveTokenUsage`). Must be called once before first use.
 
 ```python
 from vectorwave import initialize_database

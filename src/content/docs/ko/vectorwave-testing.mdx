@@ -1,7 +1,7 @@
 ---
 title: "리플레이 테스트"
 description: "과거 성공 실행을 재생하여 회귀 테스트를 수행합니다."
-order: 16
+order: 17
 category: VectorWave
 ---
 
@@ -25,6 +25,8 @@ async def generate_response(query: str):
 ```
 
 이제 모든 성공적인 실행이 잠재적 테스트 케이스로 저장됩니다.
+
+> **VectorSurfer**: 리플레이 테스트는 [VectorSurfer 대시보드](/vectorsurf)에서 사용할 수 있습니다 — 함수 선택, 실시간 진행 상황과 함께 리플레이 실행, 예상 출력과 실제 출력을 나란히 비교.
 
 ## 리플레이 테스트 실행
 
@@ -184,6 +186,6 @@ assert results["failed"] / results["total"] < 0.05  # 최대 5% 실패율
 
 ## 다음 단계
 
+- [Golden Dataset](/docs/vectorwave-golden) -- 테스트 기준선 관리
 - [RAG 검색](/docs/vectorwave-search) -- AI로 코드베이스 검색
-- [VectorCheck CLI](/docs/vectorcheck) -- 전체 CLI 테스트 프레임워크
 - [고급 설정](/docs/vectorwave-advanced) -- 커스텀 프로퍼티 및 태깅

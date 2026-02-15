@@ -142,13 +142,53 @@ Using PyGithub, VectorWave:
    - Diff of the fix
    - Test suggestions
 
+## Scheduled Healing (AutoHealerBot)
+
+VectorWave includes a built-in scheduler that automatically scans for errors and creates fix PRs:
+
+```python
+from vectorwave.utils.scheduler import start_scheduler
+import threading
+
+# Start the auto-healer in a background thread
+scheduler_thread = threading.Thread(
+    target=start_scheduler,
+    args=(5,),  # check every 5 minutes
+    daemon=True
+)
+scheduler_thread.start()
+```
+
+The `AutoHealerBot` automatically:
+1. Scans for `ERROR` status executions in the last 60 minutes
+2. Deduplicates by function name
+3. Calls `VectorWaveHealer.diagnose_and_heal(create_pr=True)` for each
+4. Tracks cooldown (60 min per function) to prevent duplicate PRs
+5. Skips errors listed in `.vtwignore`
+
 ## Cooldown Mechanism
 
 To prevent PR spam for recurring errors, VectorWave implements a **cooldown**:
 
-- After creating a PR for a specific error pattern, the healer will not create another PR for the same pattern for a configurable period
-- Default cooldown: 1 hour
+- After creating a PR for a function, the healer will not create another for 60 minutes
+- Both on-demand and scheduled healing respect the cooldown
 - This prevents flooding your repository with duplicate fix attempts
+
+## Error Suppression with .vtwignore
+
+Create a `.vtwignore` file in your project root to exclude specific error types from healing and alerts:
+
+```
+# Ignore expected exceptions
+ValueError
+KeyError
+DeprecationWarning
+```
+
+Errors matching these codes are marked as `FAILURE` instead of `ERROR`:
+- The `AutoHealerBot` skips `FAILURE` status (only processes `ERROR`)
+- No webhook alerts are sent for suppressed errors
+- Suppressed errors are still logged in Weaviate for analysis
 
 ## Configuration
 
@@ -168,8 +208,6 @@ GITHUB_REPO=org/repo-name
 ```python
 healer = VectorWaveHealer(
     model="gpt-4-turbo",     # LLM model for diagnosis
-    temperature=0.1,          # Low temperature for precise fixes
-    max_tokens=2000,          # Max tokens for fix generation
 )
 ```
 
@@ -194,8 +232,10 @@ Create `.vectorwave_errors.json` in your project root:
 }
 ```
 
+> **VectorSurfer**: Error diagnosis, batch healing, and PR creation are available through the [VectorSurfer dashboard](/vectorsurf) with a visual interface — browse errors, view AI-generated diagnoses, and create PRs with one click.
+
 ## Next Steps
 
+- [Golden Dataset](/docs/vectorwave-golden) — Curate high-quality data for caching and testing
 - [Drift Detection](/docs/vectorwave-drift) — Monitor input quality changes
 - [Replay Testing](/docs/vectorwave-testing) — Regression test with past executions
-- [VectorSurfer AI Healer](/docs/vectorsurf-features) — Visual healing dashboard

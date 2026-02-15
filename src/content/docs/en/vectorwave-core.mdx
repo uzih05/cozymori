@@ -16,7 +16,7 @@ from vectorwave import vectorize
     semantic_cache=True,
     cache_threshold=0.95,
     capture_return_value=True,
-    team="ml-team"
+    team="ml-team"  # custom tag
 )
 async def generate_response(query: str):
     return await llm.complete(query)
@@ -54,7 +54,7 @@ If the function raises an exception:
 
 1. The error is captured with full stack trace
 2. Stored in Weaviate with `status: "error"`
-3. If self-healing is configured, triggers the `AutoHealerBot`
+3. Available for [self-healing](/docs/vectorwave-healing) diagnosis and automated fix
 
 ## Sync and Async Support
 
@@ -121,6 +121,8 @@ pipeline (trace_id: abc-123, span_id: 001)
 └── format_result (trace_id: abc-123, span_id: 004)
 ```
 
+> **VectorSurfer**: Distributed traces are visualized as interactive waterfall diagrams in the [VectorSurfer dashboard](/vectorsurf) — click any span to see inputs, outputs, and duration.
+
 ### Querying Traces
 
 ```python
@@ -183,19 +185,21 @@ def calculate_risk_score(portfolio: dict, market_data: dict):
     ...
 ```
 
-## Team Tagging
+## Custom Execution Tags
 
-Tag functions by team for filtering and access control:
+Tag functions with custom metadata for filtering and monitoring. Tags are passed as `**execution_tags` and must be defined in your `.weaviate_properties` file:
 
 ```python
-@vectorize(team="ml-team", auto=True)
+@vectorize(team="ml-team", auto=True)  # custom tag
 def ml_function():
     ...
 
-@vectorize(team="backend-team", auto=True)
+@vectorize(team="backend-team", priority="high", auto=True)  # custom tags
 def backend_function():
     ...
 ```
+
+Custom tags are stored in both function metadata and execution logs, enabling filtering across the [VectorSurfer dashboard](/vectorsurf) and search APIs. See [Advanced Configuration](/docs/vectorwave-advanced) for `.weaviate_properties` setup.
 
 ## Next Steps
 

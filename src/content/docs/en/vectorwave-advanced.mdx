@@ -1,33 +1,42 @@
 ---
 title: Advanced Configuration
 description: Custom properties, dynamic tagging, webhooks, auto-injection, and data archiving.
-order: 18
+order: 19
 category: VectorWave
 ---
 
-## Custom Properties
+## Custom Properties (.weaviate_properties)
 
-Extend VectorWave's default schema with custom Weaviate properties using `.weaviate_properties`:
+Extend VectorWave's default schema with custom properties by creating a `.weaviate_properties` JSON file in your project root:
 
-```python
-@vectorize(auto=True)
-def process_order(order_id: str, amount: float):
-    return {"status": "processed", "order_id": order_id}
-
-# Define custom properties for this function
-process_order.weaviate_properties = {
-    "order_id": {
-        "type": "text",
-        "tokenization": "field",  # Exact matching for IDs
-    },
-    "amount": {
-        "type": "number",
-    },
-    "region": {
-        "type": "text",
-    },
+```json
+{
+  "team": {
+    "data_type": "TEXT",
+    "description": "Team name",
+    "tokenization": "word"
+  },
+  "priority": {
+    "data_type": "INT",
+    "description": "Priority level"
+  },
+  "region": {
+    "data_type": "TEXT",
+    "description": "Geographic region",
+    "tokenization": "field"
+  }
 }
 ```
+
+These properties are added to `VectorWaveFunctions`, `VectorWaveExecutions`, and `VectorWaveGoldenDataset` collections. Use them as `**execution_tags` in the decorator:
+
+```python
+@vectorize(auto=True, team="analytics", priority=1, region="US-WEST")  # custom tags
+def process_order(order_id: str, amount: float):
+    return {"status": "processed", "order_id": order_id}
+```
+
+After adding new properties, run `update_database_schema()` to apply them to existing collections.
 
 ### Tokenization Options
 

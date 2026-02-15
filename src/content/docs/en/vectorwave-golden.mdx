@@ -1,0 +1,94 @@
+---
+title: Golden Dataset
+description: Curate verified executions for cache priority, drift detection, and regression testing.
+order: 15
+category: VectorWave
+---
+
+## What is the Golden Dataset?
+
+The **Golden Dataset** is a curated collection of verified, high-quality function executions. When you promote an execution to "Golden" status, it becomes a trusted reference used across multiple VectorWave features.
+
+`initialize_database()` creates the `VectorWaveGoldenDataset` collection automatically.
+
+## Why Use Golden Data?
+
+Golden data is used in three key areas:
+
+### 1. Semantic Cache Priority
+
+When semantic caching is enabled, VectorWave searches the Golden Dataset **first** before checking standard execution logs. This ensures:
+
+- Deterministic results for known input patterns
+- Higher quality cached responses (manually verified)
+- Consistent behavior across deployments
+
+See [Semantic Caching](/docs/vectorwave-caching) for details on the 2-tier cache lookup.
+
+### 2. Drift Detection Baseline
+
+The [Drift Radar](/docs/vectorwave-drift) calculates a **centroid** (average vector) from all Golden entries for each function. New inputs are compared against this centroid — when the distance exceeds the threshold, a drift alert is triggered.
+
+More Golden data = more accurate centroid = fewer false positives.
+
+### 3. Replay Testing Baseline
+
+[Replay testing](/docs/vectorwave-testing) uses Golden entries as expected outputs. When you run `VectorWaveReplayer`, Golden data is tested first (priority), then standard execution logs.
+
+## Managing Golden Data
+
+### Promoting Executions
+
+```python
+from vectorwave import VectorWaveDatasetManager
+
+dm = VectorWaveDatasetManager()
+
+# Promote a verified execution to Golden status
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="Verified by QA team",
+    tags=["v2", "production"],
+)
+```
+
+The original execution's vector and properties are copied to the Golden collection.
+
+### Auto-Recommending Candidates
+
+VectorWave analyzes the vector distribution of your existing Golden data and recommends new candidates:
+
+```python
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5,
+)
+
+for c in candidates:
+    print(f"UUID: {c['uuid']}, Type: {c['type']}, Distance: {c['distance']:.3f}")
+```
+
+Candidates are classified as:
+
+| Type | Description |
+|---|---|
+| **STEADY** | Close to existing Golden centroid — reinforces known patterns |
+| **DISCOVERY** | Farther from centroid — represents new valid patterns |
+
+### Listing Golden Entries
+
+```python
+golden = dm.get_golden_dataset(
+    function_name="generate_response",
+)
+
+print(f"Golden dataset size: {len(golden)}")
+```
+
+> **VectorSurfer**: Golden Dataset management is built into the [VectorSurfer dashboard](/vectorsurf) — browse, promote, and manage golden entries visually with AI-recommended candidates.
+
+## Next Steps
+
+- [Semantic Caching](/docs/vectorwave-caching) — How Golden data gets cache priority
+- [Drift Detection](/docs/vectorwave-drift) — Golden data as drift baseline
+- [Replay Testing](/docs/vectorwave-testing) — Golden data as test baseline

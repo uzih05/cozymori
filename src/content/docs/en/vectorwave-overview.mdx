@@ -55,12 +55,16 @@ VectorWave's architecture consists of three core components:
 
 ### Data Storage
 
-VectorWave stores data in two Weaviate collections:
+VectorWave stores data in four Weaviate collections:
 
 | Collection | Purpose | Data |
 |---|---|---|
 | `VectorWaveFunctions` | Static function metadata | Source code, docstrings, descriptions, module paths |
 | `VectorWaveExecutions` | Dynamic execution logs | Inputs, outputs, errors, trace IDs, timestamps, embeddings |
+| `VectorWaveGoldenDataset` | Verified high-quality executions | Curated results for cache priority and drift baseline |
+| `VectorWaveTokenUsage` | LLM token tracking | Model, usage type, token counts for cost monitoring |
+
+> **VectorSurfer**: All collection data is visualized in the [VectorSurfer dashboard](/vectorsurf) — KPI cards, execution timelines, trace waterfalls, and Golden Dataset management.
 
 ## Performance Benchmark
 
@@ -99,7 +103,7 @@ VectorWave is the core SDK in the cozymori ecosystem:
 └────────────┘ └────────────┘ └───────────┘
 ```
 
-- **[VectorSurfer](/docs/vectorsurf-overview)** — Full-stack web dashboard (Next.js + FastAPI)
+- **[VectorSurfer](/docs/vectorsurf-overview)** — Full-stack web dashboard for AI observability
 - **[VectorSurferSTL](/docs/vectorsurferstl)** — Lightweight Streamlit dashboard
 - **[VectorCheck](/docs/vectorcheck)** — CLI regression testing framework
 

@@ -1,7 +1,7 @@
 ---
 title: "API 레퍼런스"
 description: "@vectorize 옵션, 환경 변수, 유틸리티 클래스의 완전한 참조."
-order: 19
+order: 20
 category: VectorWave
 ---
 
@@ -11,15 +11,16 @@ category: VectorWave
 |---|---|---|---|
 | `semantic_cache` | `bool` | `False` | 유사한 입력에 대한 시맨틱 캐싱 활성화 |
 | `cache_threshold` | `float` | `0.9` | 캐시 히트를 위한 코사인 유사도 임계값 (0.0 -- 1.0) |
-| `semantic_cache_scope` | `str` | `None` | 캐시 격리 스코프 (프로젝트/사용자 수준 멀티테넌시) |
+| `semantic_cache_filters` | `Dict` | `None` | 시맨틱 캐시 조회용 정적 필터 |
+| `semantic_cache_scope` | `List[str]` | `None` | 동적 캐시 필터로 사용할 함수 파라미터 이름 |
 | `capture_return_value` | `bool` | `False` | 함수 반환값을 Weaviate에 저장 |
 | `capture_inputs` | `bool` | `False` | 모든 함수 파라미터를 자동 캡처 |
+| `attributes_to_capture` | `List[str]` | `None` | 로깅할 특정 속성 |
 | `replay` | `bool` | `False` | 리플레이 기반 회귀 테스트 활성화 |
 | `auto` | `bool` | `False` | LLM을 통한 함수 설명 자동 생성 |
 | `search_description` | `str` | `None` | 벡터 검색 최적화를 위한 커스텀 설명 |
-| `team` | `str` | `None` | 필터링 및 접근 제어를 위한 팀 태그 |
-| `tags` | `dict` | `None` | 실행 태깅을 위한 키-값 메타데이터 태그 |
-| `drift_threshold` | `float` | `0.25` | 시맨틱 드리프트 감지 임계값 |
+| `sequence_narrative` | `str` | `None` | 컨텍스트 이해를 위한 스토리/내러티브 |
+| `**execution_tags` | `kwargs` | — | `.weaviate_properties`에 정의된 커스텀 태그 (예: `team="ml-team"`) |
 
 ### 사용법
 
@@ -31,9 +32,7 @@ category: VectorWave
     capture_inputs=True,
     replay=True,
     auto=True,
-    team="ml-team",
-    tags={"env": "production"},
-    drift_threshold=0.20,
+    team="ml-team",  # custom tag (.weaviate_properties에 정의)
 )
 async def generate_response(query: str):
     return await llm.complete(query)
@@ -68,7 +67,7 @@ def child_function(data):
 
 ### initialize_database()
 
-Weaviate 컬렉션을 생성합니다. 최초 사용 전 한 번 호출해야 합니다.
+네 개의 Weaviate 컬렉션(`VectorWaveFunctions`, `VectorWaveExecutions`, `VectorWaveGoldenDataset`, `VectorWaveTokenUsage`)을 생성합니다. 최초 사용 전 한 번 호출해야 합니다.
 
 ```python
 from vectorwave import initialize_database

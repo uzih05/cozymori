@@ -1,33 +1,42 @@
 ---
 title: "고급 설정"
 description: "커스텀 프로퍼티, 동적 태깅, 웹훅, 자동 인젝션, 데이터 아카이빙."
-order: 18
+order: 19
 category: VectorWave
 ---
 
-## 커스텀 프로퍼티
+## 커스텀 프로퍼티 (.weaviate_properties)
 
-`.weaviate_properties`를 사용하여 VectorWave의 기본 스키마를 커스텀 Weaviate 프로퍼티로 확장할 수 있습니다:
+프로젝트 루트에 `.weaviate_properties` JSON 파일을 생성하여 VectorWave의 기본 스키마를 확장할 수 있습니다:
 
-```python
-@vectorize(auto=True)
-def process_order(order_id: str, amount: float):
-    return {"status": "processed", "order_id": order_id}
-
-# 이 함수에 대한 커스텀 프로퍼티 정의
-process_order.weaviate_properties = {
-    "order_id": {
-        "type": "text",
-        "tokenization": "field",  # ID에 대한 정확 매칭
-    },
-    "amount": {
-        "type": "number",
-    },
-    "region": {
-        "type": "text",
-    },
+```json
+{
+  "team": {
+    "data_type": "TEXT",
+    "description": "팀 이름",
+    "tokenization": "word"
+  },
+  "priority": {
+    "data_type": "INT",
+    "description": "우선순위 레벨"
+  },
+  "region": {
+    "data_type": "TEXT",
+    "description": "지역",
+    "tokenization": "field"
+  }
 }
 ```
+
+이 프로퍼티는 `VectorWaveFunctions`, `VectorWaveExecutions`, `VectorWaveGoldenDataset` 컬렉션에 추가됩니다. 데코레이터에서 `**execution_tags`로 사용합니다:
+
+```python
+@vectorize(auto=True, team="analytics", priority=1, region="US-WEST")  # custom tags
+def process_order(order_id: str, amount: float):
+    return {"status": "processed", "order_id": order_id}
+```
+
+새 프로퍼티를 추가한 후에는 `update_database_schema()`를 실행하여 기존 컬렉션에 적용하세요.
 
 ### 토큰화 옵션
 

@@ -55,12 +55,16 @@ VectorWave의 아키텍처는 세 가지 핵심 컴포넌트로 구성됩니다:
 
 ### 데이터 저장
 
-VectorWave는 두 개의 Weaviate 컬렉션에 데이터를 저장합니다:
+VectorWave는 네 개의 Weaviate 컬렉션에 데이터를 저장합니다:
 
 | 컬렉션 | 목적 | 데이터 |
 |---|---|---|
 | `VectorWaveFunctions` | 정적 함수 메타데이터 | 소스 코드, 독스트링, 설명, 모듈 경로 |
 | `VectorWaveExecutions` | 동적 실행 로그 | 입력, 출력, 에러, 트레이스 ID, 타임스탬프, 임베딩 |
+| `VectorWaveGoldenDataset` | 검증된 고품질 실행 | 캐시 우선순위 및 드리프트 기준선을 위한 큐레이션된 결과 |
+| `VectorWaveTokenUsage` | LLM 토큰 추적 | 모델, 사용 유형, 토큰 수 (비용 모니터링용) |
+
+> **VectorSurfer**: 모든 컬렉션 데이터는 [VectorSurfer 대시보드](/vectorsurf)에서 시각화됩니다 — KPI 카드, 실행 타임라인, 트레이스 워터폴, Golden Dataset 관리.
 
 ## 성능 벤치마크
 
@@ -99,7 +103,7 @@ VectorWave는 cozymori 생태계의 코어 SDK입니다:
 └────────────┘ └────────────┘ └───────────┘
 ```
 
-- **[VectorSurfer](/docs/vectorsurf-overview)** — 풀스택 웹 대시보드 (Next.js + FastAPI)
+- **[VectorSurfer](/docs/vectorsurf-overview)** — AI 관측을 위한 풀스택 웹 대시보드
 - **[VectorSurferSTL](/docs/vectorsurferstl)** — 경량 Streamlit 대시보드
 - **[VectorCheck](/docs/vectorcheck)** — CLI 회귀 테스트 프레임워크
 

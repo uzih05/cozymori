@@ -16,7 +16,7 @@ from vectorwave import vectorize
     semantic_cache=True,
     cache_threshold=0.95,
     capture_return_value=True,
-    team="ml-team"
+    team="ml-team"  # custom tag
 )
 async def generate_response(query: str):
     return await llm.complete(query)
@@ -54,7 +54,7 @@ async def generate_response(query: str):
 
 1. 전체 스택 트레이스와 함께 에러를 캡처
 2. `status: "error"`로 Weaviate에 저장
-3. 자동 치유가 설정되어 있으면 `AutoHealerBot`을 트리거
+3. [자동 치유](/docs/vectorwave-healing) 진단 및 자동 수정에 활용 가능
 
 ## 동기/비동기 지원
 
@@ -121,6 +121,8 @@ pipeline (trace_id: abc-123, span_id: 001)
 └── format_result (trace_id: abc-123, span_id: 004)
 ```
 
+> **VectorSurfer**: 분산 트레이스는 [VectorSurfer 대시보드](/vectorsurf)에서 인터랙티브 워터폴 다이어그램으로 시각화됩니다 — 스팬을 클릭하면 입력, 출력, 소요 시간을 확인할 수 있습니다.
+
 ### 트레이스 조회
 
 ```python
@@ -183,19 +185,21 @@ def calculate_risk_score(portfolio: dict, market_data: dict):
     ...
 ```
 
-## 팀 태깅
+## 커스텀 실행 태그
 
-필터링 및 접근 제어를 위해 함수에 팀 태그를 지정할 수 있습니다:
+필터링 및 모니터링을 위해 함수에 커스텀 메타데이터를 태깅합니다. 태그는 `**execution_tags`로 전달되며, `.weaviate_properties` 파일에 정의되어 있어야 합니다:
 
 ```python
-@vectorize(team="ml-team", auto=True)
+@vectorize(team="ml-team", auto=True)  # custom tag
 def ml_function():
     ...
 
-@vectorize(team="backend-team", auto=True)
+@vectorize(team="backend-team", priority="high", auto=True)  # custom tags
 def backend_function():
     ...
 ```
+
+커스텀 태그는 함수 메타데이터와 실행 로그 모두에 저장되어, [VectorSurfer 대시보드](/vectorsurf)와 검색 API에서 필터링할 수 있습니다. `.weaviate_properties` 설정은 [고급 설정](/docs/vectorwave-advanced)을 참고하세요.
 
 ## 다음 단계
 

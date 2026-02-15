@@ -106,6 +106,15 @@ def personalized_query(query: str):
     return llm.complete(query, user_context=current_user.profile)
 ```
 
+## Golden Dataset 우선순위
+
+시맨틱 캐싱이 활성화되면, VectorWave는 **2단계 캐시 조회**를 사용합니다:
+
+1. **우선순위 1: Golden Dataset** — 먼저 검색. 수동으로 큐레이션된 검증된 결과.
+2. **우선순위 2: 일반 실행 로그** — Golden 매칭이 없을 때 검색. 모든 성공 실행 로그 사용.
+
+Golden 매칭은 결정적입니다 — 알려진 입력 패턴에 대해 일관된 고품질 결과를 보장합니다. 관리 방법은 [Golden Dataset](/docs/vectorwave-golden)을 참고하세요.
+
 ## 캐시 조회 흐름
 
 ```
@@ -116,8 +125,12 @@ Input: "How do I debug Python?"
    [0.12, -0.45, 0.78, ...]
          │
          ▼
-   HNSW Index Search
-   (Weaviate nearVector)
+   Golden Dataset 검색 (우선순위 1)
+         │
+    ┌────┴────┐
+    │ Miss    │ Hit → Golden 결과 반환
+    ▼
+   일반 실행 로그 검색 (우선순위 2)
          │
          ▼
    Cosine Similarity Check
@@ -160,10 +173,10 @@ cached = search_executions(
 print(f"Cache hits: {len(cached)}")
 ```
 
-또는 [VectorSurfer](/docs/vectorsurf-overview)를 사용하여 실시간 캐시 히트율 차트가 포함된 시각적 대시보드를 활용하세요.
+> **VectorSurfer**: 실시간 캐시 히트율, 성능 지표, 실행 타임라인은 [VectorSurfer 대시보드](/vectorsurf)에서 시각화됩니다 — 캐싱 성능을 한눈에 모니터링하세요.
 
 ## 다음 단계
 
+- [Golden Dataset](/docs/vectorwave-golden) -- 캐시 우선순위를 위한 고품질 데이터 큐레이션
 - [자동 치유](/docs/vectorwave-healing) -- 자동 에러 진단
 - [드리프트 감지](/docs/vectorwave-drift) -- 입력 품질 모니터링
-- [API 레퍼런스](/docs/vectorwave-api) -- 모든 캐싱 파라미터

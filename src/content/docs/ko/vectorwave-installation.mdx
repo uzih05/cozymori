@@ -15,6 +15,8 @@ category: VectorWave
 
 VectorWave는 [Weaviate](https://weaviate.io/)를 벡터 데이터베이스로 사용합니다.
 
+> 프로덕션 배포에는 완전 관리형 인스턴스인 [Weaviate Cloud (WCS)](https://console.weaviate.cloud/)를 고려하세요.
+
 ### Docker Compose (권장)
 
 `docker-compose.yml` 생성:
@@ -87,9 +89,16 @@ from vectorwave import initialize_database
 initialize_database()
 ```
 
+네 개의 컬렉션이 생성됩니다:
+
+- `VectorWaveFunctions` — 함수 메타데이터 저장 (소스 코드, 설명, 모듈 경로)
+- `VectorWaveExecutions` — 실행 로그 저장 (입력, 출력, 에러, 임베딩)
+- `VectorWaveGoldenDataset` — 검증된 고품질 실행 저장 (캐시 우선순위 및 드리프트 감지용)
+- `VectorWaveTokenUsage` — LLM 토큰 사용량 추적 (비용 모니터링용)
+
 ### 스키마 마이그레이션
 
-VectorWave 업그레이드 시 스키마가 변경되면:
+`.weaviate_properties`에 새 커스텀 프로퍼티를 추가하거나 VectorWave를 업그레이드할 때:
 
 ```python
 from vectorwave import update_database_schema
@@ -97,7 +106,7 @@ from vectorwave import update_database_schema
 update_database_schema()
 ```
 
-무중단 마이그레이션으로 기존 데이터가 보존됩니다.
+기존 컬렉션에 새 프로퍼티를 추가하며, 데이터 손실 없이 진행됩니다. 기존 프로퍼티는 수정되지 않습니다.
 
 ## 5. 설치 확인
 

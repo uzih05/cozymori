@@ -25,6 +25,8 @@ docker run -d \
   cr.weaviate.io/semitechnologies/weaviate:latest
 ```
 
+> For production deployments, consider [Weaviate Cloud (WCS)](https://console.weaviate.cloud/) — a fully managed Weaviate instance.
+
 ### Docker Compose (Recommended)
 
 Create a `docker-compose.yml`:
@@ -97,14 +99,16 @@ from vectorwave import initialize_database
 initialize_database()
 ```
 
-This creates two collections in Weaviate:
+This creates four collections in Weaviate:
 
 - `VectorWaveFunctions` — Stores function metadata (source code, descriptions, module paths)
 - `VectorWaveExecutions` — Stores execution logs (inputs, outputs, errors, embeddings)
+- `VectorWaveGoldenDataset` — Stores verified high-quality executions for cache priority and drift detection
+- `VectorWaveTokenUsage` — Tracks LLM token usage for cost monitoring
 
 ### Schema Migration
 
-If you upgrade VectorWave and the schema changes, use:
+If you add new custom properties via `.weaviate_properties` or upgrade VectorWave, update the schema:
 
 ```python
 from vectorwave import update_database_schema
@@ -112,7 +116,7 @@ from vectorwave import update_database_schema
 update_database_schema()
 ```
 
-This performs zero-downtime migration — existing data is preserved.
+This adds new properties to existing collections without data loss. Existing properties are never modified.
 
 ## 5. Verify Installation
 

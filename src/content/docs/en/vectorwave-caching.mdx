@@ -106,6 +106,15 @@ def personalized_query(query: str):
     return llm.complete(query, user_context=current_user.profile)
 ```
 
+## Golden Dataset Priority
+
+When semantic caching is enabled, VectorWave uses a **2-tier cache lookup**:
+
+1. **Priority 1: Golden Dataset** — Searched first. These are manually curated, verified results.
+2. **Priority 2: Standard Executions** — Searched if no Golden match. Uses all successful execution logs.
+
+Golden matches are deterministic — they ensure consistent, high-quality results for known input patterns. See [Golden Dataset](/docs/vectorwave-golden) for management details.
+
 ## How Cache Lookup Works
 
 ```
@@ -116,8 +125,12 @@ Input: "How do I debug Python?"
    [0.12, -0.45, 0.78, ...]
          │
          ▼
-   HNSW Index Search
-   (Weaviate nearVector)
+   Search Golden Dataset (Priority 1)
+         │
+    ┌────┴────┐
+    │ Miss    │ Hit → Return Golden Result
+    ▼
+   Search Standard Executions (Priority 2)
          │
          ▼
    Cosine Similarity Check
@@ -160,10 +173,10 @@ cached = search_executions(
 print(f"Cache hits: {len(cached)}")
 ```
 
-Or use [VectorSurfer](/docs/vectorsurf-overview) for a visual dashboard with real-time cache hit rate charts.
+> **VectorSurfer**: Real-time cache hit rates, performance metrics, and execution timelines are visualized in the [VectorSurfer dashboard](/vectorsurf) — monitor caching performance at a glance.
 
 ## Next Steps
 
+- [Golden Dataset](/docs/vectorwave-golden) — Curate high-quality data for cache priority
 - [Self-Healing](/docs/vectorwave-healing) — Automatic error diagnosis
 - [Drift Detection](/docs/vectorwave-drift) — Monitor input quality
-- [API Reference](/docs/vectorwave-api) — All caching parameters

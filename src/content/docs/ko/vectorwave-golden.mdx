@@ -1,0 +1,94 @@
+---
+title: Golden Dataset
+description: 캐시 우선순위, 드리프트 감지, 회귀 테스트를 위한 검증된 실행을 큐레이션합니다.
+order: 15
+category: VectorWave
+---
+
+## Golden Dataset이란?
+
+**Golden Dataset**은 검증된 고품질 함수 실행의 큐레이션된 모음입니다. 실행을 "Golden" 상태로 승격하면, 여러 VectorWave 기능에서 신뢰할 수 있는 참조로 사용됩니다.
+
+`initialize_database()`가 `VectorWaveGoldenDataset` 컬렉션을 자동으로 생성합니다.
+
+## Golden 데이터를 사용하는 이유
+
+Golden 데이터는 세 가지 핵심 영역에서 사용됩니다:
+
+### 1. 시맨틱 캐시 우선순위
+
+시맨틱 캐싱이 활성화되면, VectorWave는 일반 실행 로그를 확인하기 **전에** Golden Dataset을 먼저 검색합니다. 이를 통해:
+
+- 알려진 입력 패턴에 대한 결정적 결과
+- 수동 검증된 고품질 캐시 응답
+- 배포 간 일관된 동작
+
+2단계 캐시 조회에 대한 자세한 내용은 [시맨틱 캐싱](/docs/vectorwave-caching)을 참고하세요.
+
+### 2. 드리프트 감지 기준선
+
+[드리프트 레이더](/docs/vectorwave-drift)는 각 함수의 모든 Golden 항목에서 **중심점**(평균 벡터)을 계산합니다. 새 입력은 이 중심점과 비교되어, 거리가 임계값을 초과하면 드리프트 알림이 발생합니다.
+
+Golden 데이터가 많을수록 = 더 정확한 중심점 = 오탐 감소.
+
+### 3. 리플레이 테스트 기준선
+
+[리플레이 테스트](/docs/vectorwave-testing)는 Golden 항목을 예상 출력으로 사용합니다. `VectorWaveReplayer`를 실행하면 Golden 데이터가 먼저(우선) 테스트된 후 일반 실행 로그가 테스트됩니다.
+
+## Golden 데이터 관리
+
+### 실행 승격
+
+```python
+from vectorwave import VectorWaveDatasetManager
+
+dm = VectorWaveDatasetManager()
+
+# 검증된 실행을 Golden 상태로 승격
+dm.register_as_golden(
+    log_uuid="abc-123",
+    note="QA팀 검증 완료",
+    tags=["v2", "production"],
+)
+```
+
+원본 실행의 벡터와 프로퍼티가 Golden 컬렉션으로 복사됩니다.
+
+### 후보 자동 추천
+
+VectorWave는 기존 Golden 데이터의 벡터 분포를 분석하여 새로운 후보를 추천합니다:
+
+```python
+candidates = dm.recommend_candidates(
+    function_name="generate_response",
+    limit=5,
+)
+
+for c in candidates:
+    print(f"UUID: {c['uuid']}, Type: {c['type']}, Distance: {c['distance']:.3f}")
+```
+
+후보는 다음과 같이 분류됩니다:
+
+| 유형 | 설명 |
+|---|---|
+| **STEADY** | 기존 Golden 중심점에 가까움 — 알려진 패턴을 강화 |
+| **DISCOVERY** | 중심점에서 먼 거리 — 새로운 유효한 패턴을 나타냄 |
+
+### Golden 항목 조회
+
+```python
+golden = dm.get_golden_dataset(
+    function_name="generate_response",
+)
+
+print(f"Golden dataset size: {len(golden)}")
+```
+
+> **VectorSurfer**: Golden Dataset 관리는 [VectorSurfer 대시보드](/vectorsurf)에 내장되어 있습니다 — 시각적으로 탐색, 승격, 관리하고 AI 추천 후보를 확인할 수 있습니다.
+
+## 다음 단계
+
+- [시맨틱 캐싱](/docs/vectorwave-caching) -- Golden 데이터의 캐시 우선순위
+- [드리프트 감지](/docs/vectorwave-drift) -- Golden 데이터를 드리프트 기준선으로 활용
+- [리플레이 테스트](/docs/vectorwave-testing) -- Golden 데이터를 테스트 기준선으로 활용

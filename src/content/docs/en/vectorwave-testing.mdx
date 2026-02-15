@@ -1,7 +1,7 @@
 ---
 title: Replay Testing
 description: Regression testing by replaying past successful executions.
-order: 16
+order: 17
 category: VectorWave
 ---
 
@@ -25,6 +25,8 @@ async def generate_response(query: str):
 ```
 
 Every successful execution is now stored as a potential test case.
+
+> **VectorSurfer**: Replay testing is available through the [VectorSurfer dashboard](/vectorsurf) — select functions, run replays with real-time progress, and compare expected vs actual outputs side-by-side.
 
 ## Running Replay Tests
 
@@ -184,6 +186,6 @@ assert results["failed"] / results["total"] < 0.05  # Max 5% failure rate
 
 ## Next Steps
 
+- [Golden Dataset](/docs/vectorwave-golden) — Manage test baselines
 - [RAG Search](/docs/vectorwave-search) — Search your codebase with AI
-- [VectorCheck CLI](/docs/vectorcheck) — Full CLI testing framework
 - [Advanced Configuration](/docs/vectorwave-advanced) — Custom properties and tagging
