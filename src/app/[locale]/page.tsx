@@ -6,6 +6,7 @@ import UnifiedWaveCanvas from '@/components/UnifiedWaveCanvas';
 import GlowCard from '@/components/GlowCard';
 import ScrollReveal from '@/components/ScrollReveal';
 import { ArrowRight, ArrowUpRight, Sparkles, Globe, Code, Terminal, BarChart3 } from 'lucide-react';
+import MiniDashboard from '@/components/vectorsurf/MiniDashboard';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -23,17 +24,6 @@ async def generate(query: str):
 # Similar queries → cached in ~0.02s
 # Every call vectorized & traced to Weaviate`;
 
-const surfCode = `from vectorwave import VectorWaveHealer
-
-healer = VectorWaveHealer(model="gpt-4-turbo")
-
-diagnosis = healer.diagnose_and_heal(
-    function_name="generate",
-    lookback_minutes=60,
-    create_pr=True
-)
-
-# AI reads error logs → patches code → opens PR`;
 
 export default function Home() {
   const tIntro = useTranslations('intro');
@@ -139,14 +129,8 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <ScrollReveal delay={0.15}>
                 <div className="lg:order-1 order-2">
-                  <GlowCard className="overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-glass-border">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
-                      <span className="ml-2 text-[11px] text-text-tertiary font-mono">healer.py</span>
-                    </div>
-                    <pre className="p-5 text-[13px] text-text-secondary leading-relaxed overflow-x-auto font-mono"><code>{surfCode}</code></pre>
+                  <GlowCard className="overflow-hidden glow-violet">
+                    <MiniDashboard />
                   </GlowCard>
                 </div>
               </ScrollReveal>
