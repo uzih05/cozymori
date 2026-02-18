@@ -20,11 +20,11 @@ VectorWave's **Drift Radar** monitors this in real-time.
 ## How Drift Detection Works
 
 ```
-New Input → Embedding → Distance from Golden Centroid
+New Input → Embedding → KNN Distance Check
                               │
                     ┌─────────┴──────────┐
                     │                     │
-              Distance < 0.25       Distance ≥ 0.25
+           Avg Distance < 0.25    Avg Distance ≥ 0.25
               (Within bounds)       (DRIFT DETECTED)
                     │                     │
                     ▼                     ▼
@@ -32,49 +32,42 @@ New Input → Embedding → Distance from Golden Centroid
                                    (Discord/Slack)
 ```
 
-1. VectorWave maintains a **centroid** (average vector) of all Golden Dataset entries for each function
-2. When a new input arrives, it calculates the **cosine distance** from the centroid
-3. If the distance exceeds the threshold (default: 0.25), a drift alert is triggered
+1. When a new input arrives, VectorWave queries the **K-nearest neighbors** from successful past executions of the function
+2. It calculates the **average distance** to these K neighbors (default K=5, configurable via `DRIFT_NEIGHBOR_AMOUNT`)
+3. If the average distance exceeds the threshold (default: 0.25, configurable via `DRIFT_DISTANCE_THRESHOLD`), a drift alert is triggered
 
-## Golden Dataset as Baseline
+This KNN-based approach is more robust than a single centroid comparison, as it accounts for the local density of the vector space.
 
-Drift detection uses the [Golden Dataset](/docs/vectorwave-golden) as its baseline. The centroid (average vector) of all Golden entries for a function defines the "known-good" region. New inputs are compared against this centroid.
+## Configuration
 
-To set up Golden data for drift detection, see [Golden Dataset](/docs/vectorwave-golden).
+Enable drift detection via environment variables:
+
+```bash
+# .env
+DRIFT_DETECTION_ENABLED=True
+DRIFT_DISTANCE_THRESHOLD=0.25    # Distance threshold (default: 0.25)
+DRIFT_NEIGHBOR_AMOUNT=5          # Number of neighbors for KNN check (default: 5)
+```
 
 ## Webhook Alerts
 
-When drift is detected, VectorWave sends a real-time alert via webhook.
+When drift is detected, VectorWave sends a real-time alert via webhook. Configure alerts through environment variables:
 
-### Discord Integration
-
-```python
-from vectorwave import configure_alerts
-
-configure_alerts(
-    webhook_url="https://discord.com/api/webhooks/...",
-    drift_threshold=0.25,  # Default
-)
+```bash
+# .env
+ALERTER_STRATEGY=webhook
+ALERTER_WEBHOOK_URL=https://discord.com/api/webhooks/...
+ALERTER_MIN_LEVEL=ERROR
 ```
 
-The Discord embed includes:
+The alert payload includes:
 
 - Function name and module path
 - Error code (if applicable)
 - Trace ID for debugging
 - Captured attributes (inputs, tags)
 - Full stack trace (for error-triggered drifts)
-- Distance value from Golden centroid
-
-### Custom Webhook
-
-```python
-configure_alerts(
-    webhook_url="https://your-api.com/alerts",
-    drift_threshold=0.30,
-    format="json",  # Raw JSON payload instead of Discord embed
-)
-```
+- Average distance to K-nearest neighbors
 
 ### Alert Payload
 
@@ -100,25 +93,32 @@ configure_alerts(
 | `0.35` | Lenient | Exploratory / creative applications |
 | `0.50` | Very lenient | Wide-scope functions |
 
-### Per-Function Thresholds
+The threshold applies globally via the `DRIFT_DISTANCE_THRESHOLD` environment variable.
+
+## Simulating Drift
+
+Test whether an input would trigger a drift alert **without actually executing the function**:
 
 ```python
-@vectorize(
-    auto=True,
-    drift_threshold=0.20,  # Stricter than default
-)
-def safety_critical_function(query: str):
-    ...
+from vectorwave import simulate_drift_check
 
-@vectorize(
-    auto=True,
-    drift_threshold=0.40,  # More lenient
+result = simulate_drift_check(
+    text="How do I mine bitcoin with my GPU?",
+    function_name="generate_response",
+    threshold=0.25,   # Optional, defaults to DRIFT_DISTANCE_THRESHOLD
+    k=5,              # Optional, defaults to DRIFT_NEIGHBOR_AMOUNT
 )
-def creative_function(query: str):
-    ...
+
+print(result)
+# { "is_drift": True, "distance": 0.38, "threshold": 0.25, "neighbors": 5 }
 ```
 
-> **VectorSurfer**: Drift monitoring is visualized in the [VectorSurfer dashboard](/vectorsurf) — real-time drift distance charts, alert history, and centroid visualization per function.
+This is useful for:
+- Testing threshold sensitivity before going to production
+- Pre-validating user inputs in a safety layer
+- Building custom drift dashboards
+
+> **VectorSurfer**: Drift monitoring is visualized in the [VectorSurfer dashboard](/vectorsurf) — real-time drift distance charts, alert history, and drift visualization per function.
 
 ## Next Steps
 

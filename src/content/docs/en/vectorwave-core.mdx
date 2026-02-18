@@ -112,6 +112,16 @@ def format_result(result):
     return {"items": result, "count": len(result)}
 ```
 
+`@trace_span` also accepts optional parameters for fine-grained control:
+
+```python
+@trace_span(capture_return_value=True, attributes_to_capture=["score"])
+def rank_results(results, score=0.5):
+    return sorted(results, key=lambda x: x["score"])
+```
+
+See the [API Reference](/docs/vectorwave-api) for all `@trace_span` parameters.
+
 All child spans share the parent's `trace_id`, creating a hierarchical trace:
 
 ```
@@ -125,13 +135,48 @@ pipeline (trace_id: abc-123, span_id: 001)
 
 ### Querying Traces
 
-```python
-from vectorwave import find_by_trace_id
+Trace data can be queried through VectorWave's execution search:
 
-# Get all spans for a trace
-spans = find_by_trace_id("abc-123")
+```python
+from vectorwave import search_executions
+
+# Get all executions for a specific trace
+spans = search_executions(
+    filters={"trace_id": "abc-123"},
+    sort_by="timestamp_utc",
+)
 for span in spans:
     print(f"{span['function_name']} — {span['duration_ms']}ms")
+```
+
+## Automatic Behavior
+
+Some `@vectorize` options automatically enable other features:
+
+- **`semantic_cache=True`** automatically enables `capture_return_value=True` — cached results need stored return values.
+- **`replay=True`** automatically enables `capture_return_value=True` and captures all function arguments — replay testing needs full input/output data.
+
+This means you don't need to set `capture_return_value=True` manually when using caching or replay.
+
+## Execution Status Values
+
+Each execution is stored with one of these status values:
+
+| Status | Description |
+|---|---|
+| `SUCCESS` | Function completed normally |
+| `ERROR` | Exception raised, alert sent (if configured) |
+| `FAILURE` | Exception raised, but suppressed via `.vtwignore` |
+| `CACHE_HIT` | Semantic cache returned a cached result |
+| `ANOMALY` | Drift detected — input is far from known-good patterns |
+
+Use these values to filter executions:
+
+```python
+from vectorwave import search_executions
+
+errors = search_executions(filters={"status": "ERROR"}, limit=10)
+anomalies = search_executions(filters={"status": "ANOMALY"}, limit=10)
 ```
 
 ## Input Capture Modes

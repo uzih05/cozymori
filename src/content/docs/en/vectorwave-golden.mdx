@@ -27,9 +27,9 @@ See [Semantic Caching](/docs/vectorwave-caching) for details on the 2-tier cache
 
 ### 2. Drift Detection Baseline
 
-The [Drift Radar](/docs/vectorwave-drift) calculates a **centroid** (average vector) from all Golden entries for each function. New inputs are compared against this centroid — when the distance exceeds the threshold, a drift alert is triggered.
+The [Drift Radar](/docs/vectorwave-drift) uses a **KNN-based** approach — when a new input arrives, it's compared against the K-nearest neighbors from past successful executions. The average distance to these neighbors determines whether drift has occurred.
 
-More Golden data = more accurate centroid = fewer false positives.
+More historical data = more reliable drift detection = fewer false positives.
 
 ### 3. Replay Testing Baseline
 
@@ -74,16 +74,6 @@ Candidates are classified as:
 |---|---|
 | **STEADY** | Close to existing Golden centroid — reinforces known patterns |
 | **DISCOVERY** | Farther from centroid — represents new valid patterns |
-
-### Listing Golden Entries
-
-```python
-golden = dm.get_golden_dataset(
-    function_name="generate_response",
-)
-
-print(f"Golden dataset size: {len(golden)}")
-```
 
 > **VectorSurfer**: Golden Dataset management is built into the [VectorSurfer dashboard](/vectorsurf) — browse, promote, and manage golden entries visually with AI-recommended candidates.
 

@@ -42,25 +42,47 @@ for func in results:
 
 ### 실행 검색
 
-특정 실행 로그를 검색합니다:
+필터 기반 검색으로 특정 실행 로그를 검색합니다:
 
 ```python
 from vectorwave import search_executions
 
 results = search_executions(
-    query="timeout errors in payment processing",
     limit=10,
     filters={
-        "status": "error",
-        "team": "payments",
+        "status": "ERROR",
+        "function_name__like": "payment",
     },
+    sort_by="timestamp_utc",
+    sort_ascending=False,
 )
 
 for log in results:
-    print(f"{log['function_name']} — {log['timestamp']}")
+    print(f"{log['function_name']} — {log['timestamp_utc']}")
     print(f"  Error: {log['error_message']}")
     print(f"  Trace: {log['trace_id']}")
 ```
+
+### 에러 검색
+
+자연어 설명과의 시맨틱 유사도로 에러를 찾을 수 있습니다:
+
+```python
+from vectorwave import search_errors_by_message
+
+results = search_errors_by_message(
+    query="timeout connecting to external API",
+    limit=10,
+    filters={"function_name": "generate_response"},
+)
+
+for error in results:
+    print(f"{error['function_name']} — {error['error_code']}")
+    print(f"  Message: {error['error_message']}")
+    print(f"  Trace: {error['trace_id']}")
+```
+
+`search_executions`(필터 기반)와 달리, `search_errors_by_message`는 **벡터 검색**을 사용하여 의미적으로 유사한 에러 메시지를 찾습니다 — 정확한 에러 텍스트를 모를 때 유용합니다.
 
 ## RAG Q&A
 
@@ -111,12 +133,13 @@ print(analysis)
 VectorWave는 벡터 유사도와 키워드 필터링을 결합한 **하이브리드 검색**을 지원합니다:
 
 ```python
-from vectorwave import hybrid_search
+from vectorwave import search_functions_hybrid
 
-results = hybrid_search(
+results = search_functions_hybrid(
     query="database connection pooling",
-    keyword_filter="PostgreSQL",  # 이 키워드를 반드시 포함
     limit=10,
+    alpha=0.5,   # 0.0 = 순수 키워드 (BM25), 1.0 = 순수 벡터
+    filters={"team": "backend"},  # 선택적 필터
 )
 ```
 

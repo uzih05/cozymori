@@ -74,21 +74,6 @@ print(diagnosis["root_cause"])
 print(diagnosis["suggested_fix"])
 ```
 
-### 배치 치유
-
-모든 추적된 함수의 최근 에러를 일괄 진단하고 수정합니다:
-
-```python
-results = healer.batch_heal(
-    lookback_minutes=120,
-    create_pr=True,
-    max_prs=5,  # 생성할 PR 수 제한
-)
-
-for result in results:
-    print(f"{result['function_name']}: {result['pr_url']}")
-```
-
 ## 치유 파이프라인
 
 ### 1단계: 에러 감지
@@ -200,14 +185,14 @@ OPENAI_API_KEY=sk-...
 
 # GitHub 연동 (자동 PR용)
 GITHUB_TOKEN=ghp_...
-GITHUB_REPO=org/repo-name
+GITHUB_REPO_NAME=org/repo-name
 ```
 
 ### Healer 옵션
 
 ```python
 healer = VectorWaveHealer(
-    model="gpt-4-turbo",     # 진단용 LLM 모델
+    model="gpt-4-turbo",     # 진단용 LLM 모델 (유일한 파라미터)
 )
 ```
 
@@ -233,6 +218,10 @@ VectorWave는 에러 분류를 위한 3단계 우선순위 시스템을 사용�
 ```
 
 > **VectorSurfer**: 에러 진단, 배치 치유, PR 생성은 [VectorSurfer 대시보드](/vectorsurf)에서 시각적 인터페이스로 사용할 수 있습니다 — 에러 탐색, AI 생성 진단 확인, 원클릭 PR 생성.
+
+## 외부 리소스
+
+- [OpenAI API 문서](https://platform.openai.com/docs) — 진단 및 코드 생성에 사용되는 LLM API
 
 ## 다음 단계
 

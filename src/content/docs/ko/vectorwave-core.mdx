@@ -112,6 +112,16 @@ def format_result(result):
     return {"items": result, "count": len(result)}
 ```
 
+`@trace_span`은 세밀한 제어를 위한 선택적 파라미터도 지원합니다:
+
+```python
+@trace_span(capture_return_value=True, attributes_to_capture=["score"])
+def rank_results(results, score=0.5):
+    return sorted(results, key=lambda x: x["score"])
+```
+
+모든 `@trace_span` 파라미터는 [API 레퍼런스](/docs/vectorwave-api)를 참고하세요.
+
 모든 자식 스팬은 부모의 `trace_id`를 공유하여 계층적 트레이스를 구성합니다:
 
 ```
@@ -125,13 +135,48 @@ pipeline (trace_id: abc-123, span_id: 001)
 
 ### 트레이스 조회
 
-```python
-from vectorwave import find_by_trace_id
+트레이스 데이터는 VectorWave의 실행 검색을 통해 조회할 수 있습니다:
 
-# 트레이스의 모든 스팬 조회
-spans = find_by_trace_id("abc-123")
+```python
+from vectorwave import search_executions
+
+# 특정 트레이스의 모든 실행 조회
+spans = search_executions(
+    filters={"trace_id": "abc-123"},
+    sort_by="timestamp_utc",
+)
 for span in spans:
     print(f"{span['function_name']} — {span['duration_ms']}ms")
+```
+
+## 자동 동작
+
+일부 `@vectorize` 옵션은 다른 기능을 자동으로 활성화합니다:
+
+- **`semantic_cache=True`** — `capture_return_value=True`가 자동 활성화됩니다. 캐시된 결과를 반환하려면 반환값이 저장되어 있어야 합니다.
+- **`replay=True`** — `capture_return_value=True`와 모든 함수 인자 캡처가 자동 활성화됩니다. 리플레이 테스트에는 전체 입출력 데이터가 필요합니다.
+
+즉, 캐싱이나 리플레이를 사용할 때 `capture_return_value=True`를 수동으로 설정할 필요가 없습니다.
+
+## 실행 상태값
+
+각 실행은 다음 상태값 중 하나로 저장됩니다:
+
+| 상태 | 설명 |
+|---|---|
+| `SUCCESS` | 함수가 정상 완료 |
+| `ERROR` | 예외 발생, 알림 전송 (설정된 경우) |
+| `FAILURE` | 예외 발생, `.vtwignore`로 억제됨 |
+| `CACHE_HIT` | 시맨틱 캐시에서 결과 반환 |
+| `ANOMALY` | 드리프트 감지 — 입력이 정상 패턴에서 벗어남 |
+
+이 값을 사용하여 실행을 필터링할 수 있습니다:
+
+```python
+from vectorwave import search_executions
+
+errors = search_executions(filters={"status": "ERROR"}, limit=10)
+anomalies = search_executions(filters={"status": "ANOMALY"}, limit=10)
 ```
 
 ## 입력 캡처 모드

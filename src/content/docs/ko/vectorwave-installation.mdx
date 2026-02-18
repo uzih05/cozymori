@@ -58,26 +58,65 @@ pip install vectorwave
 
 ## 3. 환경 변수
 
-프로젝트 루트에 `.env` 파일 생성:
+프로젝트 루트에 `.env` 파일을 생성합니다. 아래는 사용 가능한 전체 옵션입니다:
 
 ```bash
-# 벡터라이저 (택 1)
-VECTORWAVE_VECTORIZER=huggingface    # 무료, 로컬 실행 (기본값)
-# VECTORWAVE_VECTORIZER=openai_client  # 높은 품질, API 키 필요
+# === Weaviate 연결 ===
+WEAVIATE_HOST=localhost              # Weaviate 호스트명 (기본값: localhost)
+WEAVIATE_PORT=8080                   # Weaviate REST API 포트 (기본값: 8080)
+WEAVIATE_GRPC_PORT=50051             # Weaviate gRPC 포트 (기본값: 50051)
+# WEAVIATE_API_KEY=your-wcs-key     # Weaviate Cloud (WCS)에 필요
 
-# OpenAI (openai_client 벡터라이저, 자동 치유, RAG에 필요)
-OPENAI_API_KEY=sk-...
+# === 벡터라이저 ===
+VECTORIZER=weaviate_module           # weaviate_module | openai_client | huggingface | none
+# HF_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2  # huggingface 벡터라이저 모델
 
-# Weaviate 연결 (선택사항)
-WEAVIATE_URL=http://localhost:8080
+# === OpenAI ===
+OPENAI_API_KEY=sk-...                # openai_client 벡터라이저, 자동 치유, RAG에 필요
+
+# === GitHub (자동 치유 PR) ===
+# GITHUB_TOKEN=ghp_...              # GitHub 개인 접근 토큰
+# GITHUB_REPO_NAME=org/repo-name    # 대상 리포지토리 (형식: org/repo)
+# GITHUB_BASE_BRANCH=main           # PR 대상 브랜치 (기본값: main)
+
+# === 드리프트 감지 ===
+# DRIFT_DETECTION_ENABLED=True      # 드리프트 모니터링 활성화 (기본값: False)
+# DRIFT_DISTANCE_THRESHOLD=0.25     # KNN 거리 임계값 (기본값: 0.25)
+# DRIFT_NEIGHBOR_AMOUNT=5           # KNN 이웃 수 (기본값: 5)
+
+# === 알림 ===
+# ALERTER_STRATEGY=webhook          # 알림 전략: none | webhook (기본값: none)
+# ALERTER_WEBHOOK_URL=https://discord.com/api/webhooks/...
+# ALERTER_MIN_LEVEL=ERROR           # 최소 알림 레벨 (기본값: ERROR)
+
+# === 성능 튜닝 ===
+# BATCH_THRESHOLD=20                # 배치 플러시 임계값, 객체 수 (기본값: 20)
+# FLUSH_INTERVAL_SECONDS=2.0        # 배치 플러시 간격, 초 (기본값: 2.0)
+# ASYNC_LOGGING=False               # 비동기 DB 로깅 활성화 (기본값: False)
+
+# === 커스텀 프로퍼티 & 에러 처리 ===
+# CUSTOM_PROPERTIES_FILE_PATH=.weaviate_properties  # 커스텀 스키마 파일 (기본값: .weaviate_properties)
+# IGNORE_ERROR_FILE_PATH=.vtwignore                 # 에러 억제 파일 (기본값: .vtwignore)
+# FAILURE_MAPPING_FILE_PATH=.vectorwave_errors.json  # 에러 코드 매핑 파일
+
+# === 데이터 마스킹 ===
+# SENSITIVE_FIELD_NAMES=password,api_key,token,secret,auth_token  # 로그에서 마스킹할 필드
+
+# === 글로벌 태그 ===
+# VECTORWAVE_TAGS_ENVIRONMENT=production   # 모든 실행에 적용
+# VECTORWAVE_TAGS_REGION=us-east-1
 ```
+
+> **최소 설정:** 대부분의 프로젝트에서는 `VECTORIZER`와 선택적으로 `OPENAI_API_KEY`만 필요합니다. 나머지 변수는 모두 기본값이 설정되어 있습니다.
 
 ### 벡터라이저 옵션
 
 | 벡터라이저 | 비용 | 품질 | 속도 | 설정 |
 |---|---|---|---|---|
-| `huggingface` | 무료 | 양호 | 로컬 CPU/GPU | API 키 불필요 |
+| `weaviate_module` | 모듈에 따라 다름 | 우수 | 서버 측 | Weaviate 모듈 설정 필요 (기본값) |
 | `openai_client` | $0.0001/1K 토큰 | 우수 | API 호출 | `OPENAI_API_KEY` 필요 |
+| `huggingface` | 무료 | 양호 | 로컬 CPU/GPU | API 키 불필요 |
+| `none` | 무료 | — | — | 벡터화 없음 |
 
 ## 4. 데이터베이스 초기화
 
@@ -124,6 +163,13 @@ print(result)  # "Hello, World!"
 ```
 
 에러 없이 실행되면 VectorWave가 준비된 것입니다.
+
+## 외부 리소스
+
+- [GitHub: Cozymori/VectorWave](https://github.com/Cozymori/VectorWave) — 소스 코드 및 이슈
+- [Weaviate 문서](https://weaviate.io/developers/weaviate) — 벡터 데이터베이스 문서
+- [Weaviate Cloud 콘솔](https://console.weaviate.cloud/) — 관리형 Weaviate 인스턴스
+- [Weaviate Python 클라이언트](https://weaviate.io/developers/weaviate/client-libraries/python) — Python 클라이언트 라이브러리
 
 ## 다음 단계
 

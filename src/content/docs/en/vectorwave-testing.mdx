@@ -37,60 +37,39 @@ from vectorwave import VectorWaveReplayer
 
 replayer = VectorWaveReplayer()
 
-# Replay last 20 executions of a function
+# Replay last 20 executions of a function (Golden Data prioritized)
 results = replayer.replay(
     function_full_name="app.generate_response",
     limit=20,
-    golden_only=True,  # Only test against Golden Dataset
 )
 
 print(f"Passed: {results['passed']}")
 print(f"Failed: {results['failed']}")
-# → { passed: 18, failed: 2 }
+# → { function: "app.generate_response", total: 20, passed: 18, failed: 2, updated: 0 }
 ```
 
-### Comparison Modes
+The replayer automatically prioritizes Golden Dataset entries, then falls back to standard execution logs.
 
-#### Exact Match
+### Semantic Comparison
 
-Compares outputs character-by-character:
-
-```python
-results = replayer.replay(
-    function_full_name="app.calculate_total",
-    mode="exact",
-    limit=50,
-)
-```
-
-Best for: deterministic functions (math, data transformations).
-
-#### Semantic Comparison
-
-Compares outputs using embedding cosine similarity:
+For AI/generative functions where outputs may vary, use `SemanticReplayer`:
 
 ```python
-results = replayer.replay(
+from vectorwave import SemanticReplayer
+
+semantic_replayer = SemanticReplayer()
+
+results = semantic_replayer.replay(
     function_full_name="app.generate_response",
-    mode="semantic",
-    threshold=0.85,  # Minimum similarity to pass
-    limit=50,
+    limit=20,
+    similarity_threshold=0.85,  # Vector similarity threshold
+    semantic_eval=True,          # LLM-based semantic evaluation
 )
 ```
 
 Best for: generative AI, NLP outputs, summarization.
 
-### Detailed Results
-
-```python
-for test in results["details"]:
-    print(f"Input: {test['input_preview']}")
-    print(f"Expected: {test['expected_preview']}")
-    print(f"Actual: {test['actual_preview']}")
-    print(f"Similarity: {test['similarity']:.2f}")
-    print(f"Status: {'PASS' if test['passed'] else 'FAIL'}")
-    print("---")
-```
+For deterministic functions (math, data transformations), use the basic `VectorWaveReplayer` which does exact match comparison.
 
 ## Updating Baselines
 
@@ -159,27 +138,27 @@ jobs:
 Quick check that functions still work:
 
 ```python
-results = replayer.replay(
+from vectorwave import SemanticReplayer
+
+semantic_replayer = SemanticReplayer()
+results = semantic_replayer.replay(
     function_full_name="app.generate_response",
     limit=5,
-    golden_only=True,
-    mode="semantic",
-    threshold=0.70,  # Low threshold, just check it's reasonable
+    similarity_threshold=0.70,  # Low threshold, just check it's reasonable
 )
 assert results["failed"] == 0
 ```
 
 ### Full Regression
 
-Thorough test against entire Golden Dataset:
+Thorough test with strict threshold:
 
 ```python
-results = replayer.replay(
+results = semantic_replayer.replay(
     function_full_name="app.generate_response",
-    limit=None,  # All Golden entries
-    golden_only=True,
-    mode="semantic",
-    threshold=0.90,  # Strict threshold
+    limit=100,
+    similarity_threshold=0.90,  # Strict threshold
+    semantic_eval=True,
 )
 assert results["failed"] / results["total"] < 0.05  # Max 5% failure rate
 ```

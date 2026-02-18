@@ -42,25 +42,47 @@ for func in results:
 
 ### Search Executions
 
-Find specific execution logs:
+Find specific execution logs using filter-based search:
 
 ```python
 from vectorwave import search_executions
 
 results = search_executions(
-    query="timeout errors in payment processing",
     limit=10,
     filters={
-        "status": "error",
-        "team": "payments",
+        "status": "ERROR",
+        "function_name__like": "payment",
     },
+    sort_by="timestamp_utc",
+    sort_ascending=False,
 )
 
 for log in results:
-    print(f"{log['function_name']} — {log['timestamp']}")
+    print(f"{log['function_name']} — {log['timestamp_utc']}")
     print(f"  Error: {log['error_message']}")
     print(f"  Trace: {log['trace_id']}")
 ```
+
+### Search Errors
+
+Find errors by semantic similarity to a natural language description:
+
+```python
+from vectorwave import search_errors_by_message
+
+results = search_errors_by_message(
+    query="timeout connecting to external API",
+    limit=10,
+    filters={"function_name": "generate_response"},
+)
+
+for error in results:
+    print(f"{error['function_name']} — {error['error_code']}")
+    print(f"  Message: {error['error_message']}")
+    print(f"  Trace: {error['trace_id']}")
+```
+
+Unlike `search_executions` (filter-based), `search_errors_by_message` uses **vector search** to find semantically similar error messages — useful when you don't know the exact error text.
 
 ## RAG Q&A
 
@@ -111,12 +133,13 @@ print(analysis)
 VectorWave supports **hybrid search** — combining vector similarity with keyword filtering:
 
 ```python
-from vectorwave import hybrid_search
+from vectorwave import search_functions_hybrid
 
-results = hybrid_search(
+results = search_functions_hybrid(
     query="database connection pooling",
-    keyword_filter="PostgreSQL",  # Must contain this keyword
     limit=10,
+    alpha=0.5,   # 0.0 = pure keyword (BM25), 1.0 = pure vector
+    filters={"team": "backend"},  # Optional filters
 )
 ```
 

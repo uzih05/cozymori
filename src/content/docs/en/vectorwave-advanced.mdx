@@ -87,20 +87,16 @@ Result:   { environment: "staging", region: "us-east-1", priority: "high" }
 
 ## Real-Time Webhook Alerting
 
-Configure webhooks for real-time notifications on errors and drift.
+Configure webhooks for real-time notifications on errors and drift via environment variables:
 
-### Discord
-
-```python
-from vectorwave import configure_alerts
-
-configure_alerts(
-    webhook_url="https://discord.com/api/webhooks/...",
-    events=["error", "drift", "healing"],
-)
+```bash
+# .env
+ALERTER_STRATEGY=webhook
+ALERTER_WEBHOOK_URL=https://discord.com/api/webhooks/...
+ALERTER_MIN_LEVEL=ERROR
 ```
 
-Discord embeds include:
+Alert payloads include:
 
 - Error code and function name
 - Trace ID (clickable link to VectorSurfer)
@@ -108,116 +104,43 @@ Discord embeds include:
 - Full stack trace
 - Drift distance (for drift events)
 
-### Slack
-
-```python
-configure_alerts(
-    webhook_url="https://hooks.slack.com/services/...",
-    format="slack",
-    events=["error"],
-)
-```
-
-### Custom HTTP Endpoint
-
-```python
-configure_alerts(
-    webhook_url="https://your-api.com/vectorwave/alerts",
-    format="json",
-    headers={"Authorization": "Bearer your-token"},
-    events=["error", "drift"],
-)
-```
+The webhook format is automatically determined by the URL (Discord, Slack, or generic JSON).
 
 ## Auto-Injection
 
-Inject VectorWave into existing modules **without modifying source code**:
+Inject VectorWave into existing modules **without modifying source code** using class methods:
 
 ```python
 from vectorwave import VectorWaveAutoInjector
 
-injector = VectorWaveAutoInjector()
+# Set default configuration for all inject calls
+VectorWaveAutoInjector.configure(
+    auto=True,
+    capture_return_value=True,
+    team="ai-team",
+)
 
 # Inject @vectorize into all functions in a module
-injector.inject(
-    module="app.services.ai",
-    options={
-        "auto": True,
-        "capture_return_value": True,
-        "team": "ai-team",
-    },
+VectorWaveAutoInjector.inject(
+    target_module_path="app.services.ai",
 )
 
 # Now all functions in app.services.ai are vectorized
 # without changing a single line of their source code
 ```
 
-### Selective Injection
+### Recursive Injection
 
 ```python
-# Only inject into specific functions
-injector.inject(
-    module="app.services.ai",
-    include=["generate_response", "embed_query"],
-    options={"auto": True},
-)
-
-# Inject into all except specific functions
-injector.inject(
-    module="app.services.ai",
-    exclude=["internal_helper", "_private_fn"],
-    options={"auto": True},
+# Inject into a module and all its submodules
+VectorWaveAutoInjector.inject(
+    target_module_path="app.services",
+    recursive=True,
+    auto=True,  # Override config per inject call
 )
 ```
 
-> **Note:** Auto-injection works at import time. Call `injector.inject()` before importing the target module.
-
-## Data Archiving
-
-Export and clean up old execution data for long-term storage or LLM fine-tuning.
-
-### Export to JSONL
-
-```python
-from vectorwave import VectorWaveArchiver
-
-archiver = VectorWaveArchiver()
-
-# Export executions to JSONL (LLM fine-tuning compatible)
-archiver.export(
-    output_path="data/executions.jsonl",
-    function_name="generate_response",  # Optional filter
-    date_range=("2025-01-01", "2025-03-31"),
-    golden_only=False,  # Export all, not just Golden
-)
-```
-
-The JSONL format is compatible with OpenAI fine-tuning:
-
-```json
-{"messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}
-```
-
-### Database Cleanup
-
-```python
-# Archive old data and remove from Weaviate
-archiver.archive_and_cleanup(
-    older_than_days=90,
-    export_path="archive/2025-q1.jsonl",
-    keep_golden=True,  # Preserve Golden Dataset entries
-)
-```
-
-### Selective Cleanup
-
-```python
-# Remove only error executions older than 30 days
-archiver.cleanup(
-    older_than_days=30,
-    filters={"status": "error"},
-)
-```
+> **Note:** Auto-injection works at import time. Call `VectorWaveAutoInjector.inject()` before importing the target module.
 
 ## Schema Migration
 
@@ -235,6 +158,95 @@ This:
 2. Adds new properties without dropping existing ones
 3. Migrates data if needed
 4. Preserves all existing execution logs and Golden Dataset entries
+
+## Sensitive Data Masking
+
+VectorWave automatically masks sensitive fields in captured inputs and outputs. By default, fields named `password`, `api_key`, `token`, `secret`, and `auth_token` are replaced with `***MASKED***`.
+
+Customize the list via environment variable:
+
+```bash
+# .env
+SENSITIVE_FIELD_NAMES=password,api_key,token,secret,auth_token,ssn,credit_card
+```
+
+Masking applies to all execution logs — both `@vectorize` and `@trace_span`.
+
+## Async Logging
+
+For latency-sensitive applications, enable async database logging to avoid blocking function execution:
+
+```bash
+# .env
+ASYNC_LOGGING=True
+```
+
+When enabled, execution logs are queued and written to Weaviate in a background thread. The function returns immediately without waiting for the DB write.
+
+> **Note:** Async logging may lose data if the process crashes before the queue is flushed. Use `force_sync=True` on critical `@trace_span` calls to override.
+
+## Batch Performance Tuning
+
+VectorWave batches writes to Weaviate for efficiency. Tune the batch behavior with:
+
+```bash
+# .env
+BATCH_THRESHOLD=20          # Flush after this many objects (default: 20)
+FLUSH_INTERVAL_SECONDS=2.0  # Flush at least every N seconds (default: 2.0)
+```
+
+- **Higher `BATCH_THRESHOLD`**: Fewer write calls but higher memory usage and latency
+- **Lower `BATCH_THRESHOLD`**: More frequent writes with lower latency
+
+## Token Usage Tracking
+
+VectorWave tracks LLM token usage in the `VectorWaveTokenUsage` collection. View aggregate stats:
+
+```python
+from vectorwave import get_token_usage_stats
+
+stats = get_token_usage_stats()
+# { "total_tokens": 125000, "by_category": { "embedding": 80000, "completion": 45000 } }
+```
+
+> **VectorSurfer**: Token usage is visualized as a donut chart widget in the [VectorSurfer dashboard](/docs/vectorsurf-features).
+
+## Data Archiving (VectorWaveArchiver)
+
+For large-scale deployments, archive old execution data to keep Weaviate performant. The archiver is an advanced import (not part of the public API):
+
+```python
+from vectorwave.database.archiver import VectorWaveArchiver
+
+archiver = VectorWaveArchiver()
+
+# Export old data to a snapshot file and remove from Weaviate
+archiver.export_and_clear(
+    older_than_days=30,
+    mode="archive",   # "snapshot" (export only) | "archive" (export + delete) | "purge" (delete only)
+    output_path="./archives/",
+)
+```
+
+## Function Cache
+
+VectorWave caches registered function metadata locally in `.vectorwave_functions_cache.json`. This avoids redundant Weaviate queries on startup when the function code hasn't changed.
+
+The cache is automatically invalidated when:
+- Function source code changes
+- `.weaviate_properties` is modified
+- `update_database_schema()` is called
+
+Delete the cache file manually to force re-registration.
+
+## Rust Core (Optional)
+
+VectorWave includes an optional Rust-accelerated core via [PyO3](https://pyo3.rs/) for performance-critical operations:
+
+- **Batch Manager** — High-throughput batch writing to Weaviate
+- **Data Masking** — Fast field-level masking for large payloads
+
+If the Rust extension is not available (e.g., unsupported platform), VectorWave automatically falls back to pure Python implementations. No configuration needed.
 
 ## Tracer Performance Optimization
 

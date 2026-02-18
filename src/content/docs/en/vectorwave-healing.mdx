@@ -74,21 +74,6 @@ print(diagnosis["root_cause"])
 print(diagnosis["suggested_fix"])
 ```
 
-### Batch Healing
-
-Diagnose and fix all recent errors across all tracked functions:
-
-```python
-results = healer.batch_heal(
-    lookback_minutes=120,
-    create_pr=True,
-    max_prs=5,  # Limit number of PRs created
-)
-
-for result in results:
-    print(f"{result['function_name']}: {result['pr_url']}")
-```
-
 ## The Healing Pipeline
 
 ### Step 1: Error Detection
@@ -200,14 +185,14 @@ OPENAI_API_KEY=sk-...
 
 # GitHub integration (for auto-PR)
 GITHUB_TOKEN=ghp_...
-GITHUB_REPO=org/repo-name
+GITHUB_REPO_NAME=org/repo-name
 ```
 
 ### Healer Options
 
 ```python
 healer = VectorWaveHealer(
-    model="gpt-4-turbo",     # LLM model for diagnosis
+    model="gpt-4-turbo",     # LLM model for diagnosis (only parameter)
 )
 ```
 
@@ -233,6 +218,10 @@ Create `.vectorwave_errors.json` in your project root:
 ```
 
 > **VectorSurfer**: Error diagnosis, batch healing, and PR creation are available through the [VectorSurfer dashboard](/vectorsurf) with a visual interface — browse errors, view AI-generated diagnoses, and create PRs with one click.
+
+## External Resources
+
+- [OpenAI API Documentation](https://platform.openai.com/docs) — LLM API used for diagnosis and code generation
 
 ## Next Steps
 

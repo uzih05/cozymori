@@ -65,7 +65,7 @@ OPENAI_API_KEY=sk-...
 
 # Required for auto-PR (optional)
 GITHUB_TOKEN=ghp_...
-GITHUB_REPO=org/repo-name
+GITHUB_REPO_NAME=org/repo-name
 ```
 
 ### On-Demand Healing
@@ -140,7 +140,7 @@ Golden data is prioritized in semantic caching — when a cache hit matches gold
 
 ## 6. Drift Detection (Optional)
 
-Monitor when inputs start drifting from known-good data. When new inputs exceed the drift threshold from your Golden Dataset centroid, VectorWave sends a webhook alert (Discord, Slack, etc.).
+Monitor when inputs start drifting from known-good patterns. VectorWave uses a KNN-based approach to compare new inputs against past successful executions. When the average distance exceeds the threshold, a webhook alert is sent (Discord, Slack, etc.).
 
 See [Drift Detection](/docs/vectorwave-drift) for setup and configuration.
 
@@ -205,10 +205,12 @@ vw export --target my_module.my_function --output data.jsonl
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | For caching/healing | OpenAI API key for embeddings and LLM features |
-| `WEAVIATE_URL` | No | Weaviate URL (default: `http://localhost:8080`) |
-| `VECTORWAVE_VECTORIZER` | No | `openai_client` or `huggingface` (default: `huggingface`) |
+| `WEAVIATE_HOST` | No | Weaviate hostname (default: `localhost`) |
+| `WEAVIATE_PORT` | No | Weaviate HTTP port (default: `8080`) |
+| `WEAVIATE_GRPC_PORT` | No | Weaviate gRPC port (default: `50051`) |
+| `VECTORIZER` | No | Embedding provider: `weaviate_module`, `openai_client`, `huggingface`, or `none` (default: `weaviate_module`) |
 | `GITHUB_TOKEN` | For auto-PR | GitHub token for self-healing PR creation |
-| `GITHUB_REPO` | For auto-PR | Target repository (e.g. `org/repo-name`) |
+| `GITHUB_REPO_NAME` | For auto-PR | Target repository (e.g. `org/repo-name`) |
 
 ### @vectorize Options
 

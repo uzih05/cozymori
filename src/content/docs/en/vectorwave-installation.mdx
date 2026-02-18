@@ -68,26 +68,65 @@ pip install vectorwave
 
 ## 3. Environment Variables
 
-Create a `.env` file in your project root:
+Create a `.env` file in your project root. Below is a complete reference with all available options:
 
 ```bash
-# Vectorizer (choose one)
-VECTORWAVE_VECTORIZER=huggingface    # Free, runs locally (default)
-# VECTORWAVE_VECTORIZER=openai_client  # Higher quality, requires API key
+# === Weaviate Connection ===
+WEAVIATE_HOST=localhost              # Weaviate hostname (default: localhost)
+WEAVIATE_PORT=8080                   # Weaviate REST API port (default: 8080)
+WEAVIATE_GRPC_PORT=50051             # Weaviate gRPC port (default: 50051)
+# WEAVIATE_API_KEY=your-wcs-key     # Required for Weaviate Cloud (WCS)
 
-# OpenAI (required for openai_client vectorizer, self-healing, and RAG)
-OPENAI_API_KEY=sk-...
+# === Vectorizer ===
+VECTORIZER=weaviate_module           # weaviate_module | openai_client | huggingface | none
+# HF_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2  # Model for huggingface vectorizer
 
-# Weaviate connection (optional, defaults shown)
-WEAVIATE_URL=http://localhost:8080
+# === OpenAI ===
+OPENAI_API_KEY=sk-...                # Required for openai_client vectorizer, healing, RAG
+
+# === GitHub (Self-Healing Auto-PR) ===
+# GITHUB_TOKEN=ghp_...              # GitHub personal access token
+# GITHUB_REPO_NAME=org/repo-name    # Target repository (format: org/repo)
+# GITHUB_BASE_BRANCH=main           # Base branch for PRs (default: main)
+
+# === Drift Detection ===
+# DRIFT_DETECTION_ENABLED=True      # Enable drift monitoring (default: False)
+# DRIFT_DISTANCE_THRESHOLD=0.25     # KNN distance threshold (default: 0.25)
+# DRIFT_NEIGHBOR_AMOUNT=5           # Number of KNN neighbors (default: 5)
+
+# === Alerting ===
+# ALERTER_STRATEGY=webhook          # Alert strategy: none | webhook (default: none)
+# ALERTER_WEBHOOK_URL=https://discord.com/api/webhooks/...
+# ALERTER_MIN_LEVEL=ERROR           # Minimum alert level (default: ERROR)
+
+# === Performance Tuning ===
+# BATCH_THRESHOLD=20                # Batch flush threshold in objects (default: 20)
+# FLUSH_INTERVAL_SECONDS=2.0        # Batch flush interval in seconds (default: 2.0)
+# ASYNC_LOGGING=False               # Enable async DB logging (default: False)
+
+# === Custom Properties & Error Handling ===
+# CUSTOM_PROPERTIES_FILE_PATH=.weaviate_properties  # Custom schema file (default: .weaviate_properties)
+# IGNORE_ERROR_FILE_PATH=.vtwignore                 # Error suppression file (default: .vtwignore)
+# FAILURE_MAPPING_FILE_PATH=.vectorwave_errors.json  # Error code mapping file
+
+# === Data Masking ===
+# SENSITIVE_FIELD_NAMES=password,api_key,token,secret,auth_token  # Fields to mask in logs
+
+# === Global Tags ===
+# VECTORWAVE_TAGS_ENVIRONMENT=production   # Applied to all executions
+# VECTORWAVE_TAGS_REGION=us-east-1
 ```
+
+> **Minimal setup:** For most projects, you only need `VECTORIZER` and optionally `OPENAI_API_KEY`. All other variables have sensible defaults.
 
 ### Vectorizer Options
 
 | Vectorizer | Cost | Quality | Speed | Setup |
 |---|---|---|---|---|
-| `huggingface` | Free | Good | Local CPU/GPU | No API key needed |
+| `weaviate_module` | Depends on module | Excellent | Server-side | Weaviate module configured (default) |
 | `openai_client` | $0.0001/1K tokens | Excellent | API call | Requires `OPENAI_API_KEY` |
+| `huggingface` | Free | Good | Local CPU/GPU | No API key needed |
+| `none` | Free | — | — | No vectorization |
 
 ## 4. Initialize Database
 
@@ -160,6 +199,13 @@ Ensure you're using the correct Python environment:
 ```bash
 pip show vectorwave
 ```
+
+## External Resources
+
+- [GitHub: Cozymori/VectorWave](https://github.com/Cozymori/VectorWave) — Source code and issues
+- [Weaviate Documentation](https://weaviate.io/developers/weaviate) — Vector database docs
+- [Weaviate Cloud Console](https://console.weaviate.cloud/) — Managed Weaviate instances
+- [Weaviate Python Client](https://weaviate.io/developers/weaviate/client-libraries/python) — Python client library
 
 ## Next Steps
 

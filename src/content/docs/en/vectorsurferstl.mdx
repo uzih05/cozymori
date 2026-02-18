@@ -12,10 +12,11 @@ category: Ecosystem
 | Feature | VectorSurfer | VectorSurferSTL |
 |---|---|---|
 | **Best for** | Production, teams | Quick setup, local dev |
-| **Setup time** | Dashboard ready | ~1 min |
+| **Setup time** | ~5 min | ~1 min |
 | **AI Healer** | Full UI | Basic UI |
 | **Multi-language** | EN/JA/KO | EN only |
 | **Customization** | High | Moderate |
+| **Source** | Hosted service | Open source (MIT) |
 
 ## Quick Start
 
@@ -35,6 +36,22 @@ Open `http://localhost:8501` in your browser.
 - **Weaviate** running with VectorWave data
 
 If you already have Weaviate running for VectorWave, no additional database setup is needed.
+
+## Configuration
+
+VectorSurferSTL reads the same environment variables as VectorWave. Create a `.env` file or set them in your shell:
+
+```bash
+# Required — Weaviate connection
+WEAVIATE_HOST=localhost
+WEAVIATE_PORT=8080
+WEAVIATE_GRPC_PORT=50051
+
+# Optional — for AI Healer feature
+OPENAI_API_KEY=sk-...
+```
+
+For Weaviate Cloud (WCS) connections, add `WEAVIATE_API_KEY`. See the [VectorWave Installation](/docs/vectorwave-installation) guide for the full environment variable reference.
 
 ## Features
 
@@ -73,6 +90,13 @@ If you already have Weaviate running for VectorWave, no additional database setu
 - You're running in production
 - Multiple team members need access
 - You need advanced features (trace waterfall, batch healing, replay testing)
+
+## Open Source
+
+VectorSurferSTL is open source under the **MIT License**. Contributions are welcome.
+
+- [GitHub: Cozymori/VectorSurferSTL](https://github.com/Cozymori/VectorSurferSTL) — Source code, issues, and pull requests
+- [PyPI: vectorsurferstl](https://pypi.org/project/vectorsurferstl/) — Package page
 
 ## Next Steps
 

@@ -7,39 +7,83 @@ category: VectorSurfer
 
 ## Dashboard
 
-The main dashboard uses a responsive card-based layout that shows all key metrics at a glance.
+The main dashboard uses a customizable widget grid layout. Enter **Edit Mode** to add, remove, resize, and reorder widgets.
 
-### KPI Cards
+### Available Widgets
 
-Four top-level KPI cards display real-time metrics:
-
-| Card | Metric | Description |
+| Widget | Size | Description |
 |---|---|---|
-| **Total Calls** | Count | Total function executions tracked |
-| **Avg Latency** | Milliseconds | Average execution time across all functions |
-| **Error Rate** | Percentage | Ratio of failed to total executions |
-| **Cache Hit %** | Percentage | Semantic cache hit rate |
+| **KPI Overview** | S / M / L | Five KPI cards: Total Executions, Success Rate, Errors, Cache Hit Rate, Avg Duration. Each shows a sparkline and trend indicator vs. previous period. |
+| **Execution Timeline** | M / L | Bar/line chart showing executions over time with three series: Success (green), Error (red), Cache Hit (blue). Bucket size adapts to the selected time range. |
+| **Cache Hit Rate** | S | Circular gauge showing cache hit percentage with hit/total count. |
+| **Error Rate** | S | Large percentage display with color coding: blue (under 5%), orange (5–10%), red (over 10%). |
+| **Token Usage** | S / M | Total token count with a donut chart breakdown by category. |
+| **Function Distribution** | M / L | Horizontal bar chart of the top 10 functions by execution count. |
+| **Recent Errors** | M / L | Scrollable list of latest errors showing function name, error code, message, and relative time. |
+| **System Status** | S | Weaviate connection status (connected/disconnected), registered function count, and last-checked timestamp. |
+| **Suggest Overview** | M / L | Priority-badged list of top 5 AI suggestions (critical/high/medium/low). Links to the full Suggest page. |
 
-### Execution Timeline
+### Widget Sizes
 
-A real-time chart showing function executions over time:
+- **S** (Small) — 1 column
+- **M** (Medium) — 2 columns
+- **L** (Large) — 4 columns, full width
 
-- Stacked area chart with success/error/cached breakdown
-- Configurable time range (1h, 6h, 24h, 7d, 30d)
-- Hover for detailed breakdowns per timestamp
-- Auto-refreshes at configurable intervals
+### Dashboard Controls
 
-### Error Distribution
+- **Time Range** — Select from presets (15m, 30m, 1h, 3h, 6h, 12h, 24h, 3d, 7d) or set a custom date-time range. All time-based widgets update together.
+- **Chart Fill** — Choose between Line, Gradient, or Solid fill styles for charts.
+- **Refresh** — Manually refresh all widget data.
+- **Edit Mode** — Toggle to add/remove/resize widgets. Each widget shows S/M/L size buttons and a remove button.
 
-Donut chart showing error types:
+## Ask AI
 
-- Grouped by error code or exception type
-- Click to filter execution list by error type
-- Color-coded severity levels
+Natural language Q&A over your VectorWave data using RAG.
 
-### Widget Customization
+### How to Use
 
-Drag-and-drop widgets to customize your dashboard layout. Resize widgets and save layouts per user.
+1. Navigate to **Ask AI** in the sidebar
+2. Select a **function scope** — choose "All Functions" or a specific function to narrow the context
+3. Type your question in the text area (e.g., "Why is my embed function failing?")
+4. Click **Ask**
+
+The AI retrieves relevant function data, execution logs, and error context from Weaviate, then generates an answer.
+
+### Plan Limits
+
+| Plan | Daily AI Calls | Saved Response Access |
+|---|---|---|
+| **Free** | 5 per day | Locked after 24 hours |
+| **Pro** | Unlimited | Full access to all history |
+
+Free plan users see a usage bar showing today's remaining calls. When the daily limit is reached, the Ask button is disabled with a message: "Daily limit reached. Upgrade to Pro for unlimited access."
+
+### Saving and Bookmarking
+
+Responses from Ask AI are automatically saved to your **AI History**. You can bookmark important responses by clicking the bookmark icon on any result.
+
+## AI History (Saved Responses)
+
+Browse and manage all AI responses from Ask AI and Healer.
+
+### Filtering
+
+- **Source filter** — Show all, Ask AI only, or Healer only
+- **Bookmarked** — Toggle to show only bookmarked responses
+- **Search** — Full-text search across questions and answers
+
+### Response Cards
+
+Each card shows the source icon, question preview, source type badge, function name (if scoped), timestamp, and bookmark status. Click to expand and view the full answer.
+
+### Actions
+
+- **Bookmark / Unbookmark** — Toggle bookmark status on any response
+- **Delete** — Remove a response permanently (with confirmation)
+
+### Free Plan Limitation
+
+On the Free plan, responses older than 24 hours are locked (shown with reduced opacity and a lock icon). Upgrade to Pro for unlimited access to your full AI history.
 
 ## Trace Waterfall
 
@@ -79,37 +123,26 @@ Click any span to see:
 
 ## AI Healer
 
-The AI Healer diagnoses errors and suggests code fixes automatically.
-
-### Error Browser
-
-Browse all recent errors with:
-
-- Error type and message
-- Affected function and module
-- Timestamp and frequency
-- Stack trace preview
+The AI Healer diagnoses errors and suggests code fixes. Requires an OpenAI API key.
 
 ### Single Diagnosis
 
-1. Select an error from the list
-2. Click **Diagnose** to run the AI Healer
-3. View the diagnosis:
-   - Root cause analysis
-   - Suggested code fix with diff highlighting
-   - Confidence score
-4. Click **Create PR** to open a GitHub Pull Request
+1. Select a function from the dropdown
+2. Adjust the **lookback** slider to set the time window
+3. Click **Diagnose & Heal**
+4. View the diagnosis: root cause analysis and suggested fix (syntax-highlighted Python code)
+5. Copy the fix or **Save** the diagnosis to AI History (Pro only)
 
 ### Batch Diagnosis
 
-1. Select multiple errors (or **Select All**)
-2. Click **Batch Diagnose**
-3. Review all diagnoses in a summary view
-4. Create PRs for approved fixes
+1. Switch to **Batch Mode**
+2. Select multiple functions using checkboxes
+3. Click **Batch Diagnose (N)**
+4. Review all diagnoses in a summary view
 
-### Diagnosis History
+### Time Range
 
-View past diagnoses and their outcomes — which fixes were merged, which were rejected, and success rate over time.
+Choose a lookback window: 1h, 3h, 6h, 12h, 24h, 3d, 7d, or All.
 
 ## Replay Testing
 
@@ -159,13 +192,23 @@ Results include:
 - **Errors** — Matching error logs with stack traces
 - **Traces** — Matching trace chains with waterfall preview
 
-### RAG Q&A
+## Settings
 
-Click **Ask AI** for natural language Q&A:
+### Appearance
 
-- Type a question about your codebase
-- Get contextual answers based on your data
-- Sources are linked for verification
+Three theme options: **Dark** (neon dark mode), **Light** (clean light mode), **System** (follows OS preference).
+
+### AI Settings
+
+Configure your global OpenAI API key for all AI features.
+
+### Connections
+
+Manage Weaviate connections. Set per-connection OpenAI API keys for isolated AI access.
+
+### Account
+
+View your profile, plan status, and security settings. Upgrade or downgrade your plan.
 
 ## Multi-Language UI
 
@@ -177,7 +220,7 @@ VectorSurfer supports three languages:
 | Japanese | `ja` |
 | Korean | `ko` |
 
-Switch languages from the settings menu. All UI elements, labels, and messages are translated.
+Switch languages from the login page, signup page, projects page, or the account settings. All UI elements, labels, and messages are translated.
 
 ## Next Steps
 

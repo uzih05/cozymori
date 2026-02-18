@@ -50,17 +50,87 @@ def child_function(data):
     return process(data)
 ```
 
-파라미터 없이 사용하며, 부모 `@vectorize` 호출의 `trace_id`를 자동으로 상속받습니다.
+부모 `@vectorize` 호출의 `trace_id`를 자동으로 상속받습니다.
+
+### 선택적 파라미터
+
+`@trace_span`은 세밀한 제어를 위한 키워드 인자도 지원합니다:
+
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `attributes_to_capture` | `List[str]` | `None` | 이 스팬에 로깅할 특정 속성 |
+| `capture_return_value` | `bool` | `False` | 스팬의 반환값 저장 |
+| `force_sync` | `bool` | `False` | 동기 DB 쓰기 강제 (비동기 로깅 무시) |
+
+```python
+@trace_span(capture_return_value=True, attributes_to_capture=["score"])
+def rank_results(results, score=0.5):
+    return sorted(results, key=lambda x: x["score"])
+```
 
 ## 환경 변수
 
+### 연결
+
 | 변수 | 필수 여부 | 기본값 | 설명 |
 |---|---|---|---|
+| `WEAVIATE_HOST` | 아니오 | `localhost` | Weaviate 호스트명 |
+| `WEAVIATE_PORT` | 아니오 | `8080` | Weaviate HTTP 포트 |
+| `WEAVIATE_GRPC_PORT` | 아니오 | `50051` | Weaviate gRPC 포트 |
+| `WEAVIATE_API_KEY` | WCS용 | -- | Weaviate Cloud API 키 |
+
+### 벡터라이저
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
+| `VECTORIZER` | 아니오 | `weaviate_module` | 임베딩 제공자: `weaviate_module`, `openai_client`, `huggingface`, `none` |
 | `OPENAI_API_KEY` | AI 기능에 필요 | -- | 임베딩, 자동 문서화, 치유, RAG용 OpenAI API 키 |
-| `WEAVIATE_URL` | 아니오 | `http://localhost:8080` | Weaviate 데이터베이스 URL |
-| `VECTORWAVE_VECTORIZER` | 아니오 | `huggingface` | 임베딩 제공자: `huggingface` 또는 `openai_client` |
+| `HF_MODEL_NAME` | 아니오 | `sentence-transformers/all-MiniLM-L6-v2` | `huggingface` 벡터라이저용 HuggingFace 모델 |
+| `WEAVIATE_VECTORIZER_MODULE` | 아니오 | `text2vec-openai` | Weaviate 내장 벡터라이저 모듈명 |
+| `WEAVIATE_GENERATIVE_MODULE` | 아니오 | `generative-openai` | Weaviate 생성 모듈명 |
+
+### GitHub (자동 치유)
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
 | `GITHUB_TOKEN` | 자동 PR에 필요 | -- | GitHub 개인 접근 토큰 |
-| `GITHUB_REPO` | 자동 PR에 필요 | -- | GitHub 리포지토리 (형식: `org/repo`) |
+| `GITHUB_REPO_NAME` | 자동 PR에 필요 | -- | GitHub 리포지토리 (형식: `org/repo`) |
+| `GITHUB_BASE_BRANCH` | 아니오 | `main` | 자동 PR 대상 브랜치 |
+
+### 드리프트 감지 및 알림
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
+| `DRIFT_DETECTION_ENABLED` | 아니오 | `False` | 드리프트 감지 활성화 |
+| `DRIFT_DISTANCE_THRESHOLD` | 아니오 | `0.25` | 드리프트 알림 거리 임계값 |
+| `DRIFT_NEIGHBOR_AMOUNT` | 아니오 | `5` | KNN 드리프트 검사 이웃 수 |
+| `ALERTER_STRATEGY` | 아니오 | `none` | 알림 전략: `none` 또는 `webhook` |
+| `ALERTER_WEBHOOK_URL` | 알림용 | -- | 알림 웹훅 URL (Discord, Slack 등) |
+| `ALERTER_MIN_LEVEL` | 아니오 | `ERROR` | 최소 알림 레벨 |
+
+### 성능 튜닝
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
+| `BATCH_THRESHOLD` | 아니오 | `20` | 배치 플러시 전 객체 수 |
+| `FLUSH_INTERVAL_SECONDS` | 아니오 | `2.0` | 배치 플러시 시간 간격 (초) |
+| `ASYNC_LOGGING` | 아니오 | `False` | 낮은 지연시간을 위한 비동기 DB 로깅 |
+
+### 파일 경로
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
+| `CUSTOM_PROPERTIES_FILE_PATH` | 아니오 | `.weaviate_properties` | 커스텀 스키마 프로퍼티 파일 |
+| `IGNORE_ERROR_FILE_PATH` | 아니오 | `.vtwignore` | 에러 억제 파일 |
+| `FAILURE_MAPPING_FILE_PATH` | 아니오 | `.vectorwave_errors.json` | 에러 코드 매핑 파일 |
+
+### 데이터 및 태그
+
+| 변수 | 필수 여부 | 기본값 | 설명 |
+|---|---|---|---|
+| `SENSITIVE_FIELD_NAMES` | 아니오 | `password,api_key,token,secret,auth_token` | 로그에서 마스킹할 쉼표 구분 필드명 |
+| `RECOMMENDATION_STEADY_MARGIN` | 아니오 | `0.05` | Golden Dataset 추천 STEADY 마진 |
+| `RECOMMENDATION_DISCOVERY_MARGIN` | 아니오 | `0.15` | Golden Dataset 추천 DISCOVERY 마진 |
 | `VECTORWAVE_TAGS_*` | 아니오 | -- | 글로벌 태그 (예: `VECTORWAVE_TAGS_ENV=production`) |
 
 ## 핵심 함수
@@ -83,17 +153,6 @@ from vectorwave import update_database_schema
 update_database_schema()
 ```
 
-### find_by_trace_id(trace_id)
-
-분산 트레이스의 모든 스팬을 조회합니다.
-
-```python
-from vectorwave import find_by_trace_id
-
-spans = find_by_trace_id("abc-123")
-# Returns: [{ function_name, span_id, duration_ms, status, ... }]
-```
-
 ### search_functions(query, limit)
 
 저장된 함수 메타데이터에 대한 벡터 검색입니다.
@@ -104,18 +163,60 @@ from vectorwave import search_functions
 results = search_functions(query="authentication", limit=5)
 ```
 
-### search_executions(query, limit, filters)
+### search_executions(limit, filters, sort_by, sort_ascending)
 
-실행 로그에 대한 벡터 검색으로, 선택적 필터를 지원합니다.
+필터링과 정렬을 사용한 실행 로그 검색입니다. `search_functions`와 달리 벡터 검색이 아닌 필터 기반 조회를 사용합니다.
 
 ```python
 from vectorwave import search_executions
 
+# 최근 에러 조회
 results = search_executions(
-    query="timeout errors",
     limit=10,
-    filters={"status": "error", "team": "backend"},
+    filters={"status": "ERROR", "duration_ms__gte": 100},
+    sort_by="timestamp_utc",
+    sort_ascending=False,
 )
+```
+
+필터 연산자: 정확 매칭 (기본값), `__not_equal`, `__gte`, `__gt`, `__lte`, `__lt`, `__like`.
+
+### search_functions_hybrid(query, limit, filters, alpha)
+
+함수 정의에 대한 하이브리드 검색 (키워드 + 벡터)입니다.
+
+```python
+from vectorwave import search_functions_hybrid
+
+results = search_functions_hybrid(
+    query="calculate loyalty points",
+    limit=5,
+    alpha=0.5,  # 0.0 = 순수 키워드, 1.0 = 순수 벡터
+)
+```
+
+### search_errors_by_message(query, limit, filters)
+
+에러 메시지에 대한 시맨틱 검색입니다. 벡터 유사도를 사용하여 자연어 설명과 매칭되는 에러를 찾습니다.
+
+```python
+from vectorwave import search_errors_by_message
+
+results = search_errors_by_message(
+    query="timeout connecting to database",
+    limit=10,
+    filters={"function_name": "generate_response"},
+)
+```
+
+### generate_and_register_metadata()
+
+`auto=True`가 설정된 모든 등록 함수에 대해 LLM 기반 메타데이터 생성을 트리거합니다. 초기 설정 후 설명을 일괄 생성하는 데 유용합니다.
+
+```python
+from vectorwave import generate_and_register_metadata
+
+generate_and_register_metadata()
 ```
 
 ### search_and_answer(query)
@@ -149,9 +250,7 @@ analysis = analyze_trace_log(
 from vectorwave import VectorWaveHealer
 
 healer = VectorWaveHealer(
-    model="gpt-4-turbo",     # LLM 모델
-    temperature=0.1,          # 생성 temperature
-    max_tokens=2000,          # 최대 수정 코드 길이
+    model="gpt-4-turbo",     # LLM 모델 (유일한 파라미터)
 )
 ```
 
@@ -163,18 +262,7 @@ result = healer.diagnose_and_heal(
     lookback_minutes=60,      # 최근 N분 내 에러 검색
     create_pr=True,           # 수정 사항으로 GitHub PR 생성
 )
-# Returns: { error_type, root_cause, fix_description, pr_url }
-```
-
-### batch_heal()
-
-```python
-results = healer.batch_heal(
-    lookback_minutes=120,
-    create_pr=True,
-    max_prs=5,
-)
-# Returns: [{ function_name, error_type, pr_url }]
+# Returns: str (LLM이 제안한 수정 코드 또는 에러 메시지)
 ```
 
 ## VectorWaveReplayer
@@ -192,12 +280,23 @@ replayer = VectorWaveReplayer()
 results = replayer.replay(
     function_full_name="app.generate_response",
     limit=20,                 # 리플레이할 최대 실행 수
-    golden_only=True,         # Golden Dataset 항목만
-    mode="semantic",          # "exact" 또는 "semantic"
-    threshold=0.85,           # 유사도 임계값 (시맨틱 모드)
-    update_baseline=False,    # 새 출력으로 Golden 업데이트
+    update_baseline=False,    # 불일치 시 베이스라인 업데이트
 )
-# Returns: { passed, failed, total, details: [...] }
+# Returns: { function, total, passed, failed, updated, failures }
+```
+
+시맨틱 비교를 사용하려면 `SemanticReplayer`를 사용하세요:
+
+```python
+from vectorwave import SemanticReplayer
+
+semantic_replayer = SemanticReplayer()
+results = semantic_replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,
+    similarity_threshold=0.85,  # 벡터 유사도 임계값
+    semantic_eval=True,          # LLM 기반 시맨틱 평가 사용
+)
 ```
 
 ## VectorWaveDatasetManager
@@ -228,72 +327,45 @@ candidates = dm.recommend_candidates(
 )
 ```
 
-### get_golden_dataset()
-
-```python
-golden = dm.get_golden_dataset(function_name="generate_response")
-```
-
-## VectorWaveArchiver
-
-### 생성자
-
-```python
-from vectorwave import VectorWaveArchiver
-archiver = VectorWaveArchiver()
-```
-
-### export()
-
-```python
-archiver.export(
-    output_path="data/executions.jsonl",
-    function_name="generate_response",
-    date_range=("2025-01-01", "2025-03-31"),
-    golden_only=False,
-)
-```
-
-### archive_and_cleanup()
-
-```python
-archiver.archive_and_cleanup(
-    older_than_days=90,
-    export_path="archive/2025-q1.jsonl",
-    keep_golden=True,
-)
-```
-
 ## VectorWaveAutoInjector
 
-### 생성자
+자동 인젝션은 클래스 메서드를 사용합니다 — 인스턴스 생성이 필요 없습니다.
+
+### configure()
 
 ```python
 from vectorwave import VectorWaveAutoInjector
-injector = VectorWaveAutoInjector()
+
+# 모든 inject 호출에 적용할 기본 설정
+VectorWaveAutoInjector.configure(
+    auto=True,
+    capture_return_value=True,
+    team="ai-team",
+)
 ```
 
 ### inject()
 
 ```python
-injector.inject(
-    module="app.services.ai",
-    include=["func_a", "func_b"],   # 선택적 화이트리스트
-    exclude=["_private"],            # 선택적 블랙리스트
-    options={"auto": True, "team": "ai"},
+# 모듈의 모든 함수에 @vectorize 주입
+VectorWaveAutoInjector.inject(
+    target_module_path="app.services.ai",
+    recursive=False,          # 하위 모듈도 재귀적으로 스캔
+    team="ai-team",           # inject 호출별 설정 오버라이드
 )
 ```
 
-## configure_alerts()
+## 웹훅 알림
 
-```python
-from vectorwave import configure_alerts
+알림은 함수 호출이 아닌 환경 변수로 설정합니다:
 
-configure_alerts(
-    webhook_url="https://discord.com/api/webhooks/...",
-    drift_threshold=0.25,
-    events=["error", "drift", "healing"],
-    format="discord",        # "discord", "slack", 또는 "json"
-    headers=None,            # JSON 형식용 커스텀 헤더
-)
+```bash
+# .env
+ALERTER_STRATEGY=webhook                              # 웹훅 알림 활성화
+ALERTER_WEBHOOK_URL=https://discord.com/api/webhooks/...  # 웹훅 엔드포인트
+ALERTER_MIN_LEVEL=ERROR                               # 최소 알림 레벨
+DRIFT_DETECTION_ENABLED=True                          # 드리프트 알림 활성화
+DRIFT_DISTANCE_THRESHOLD=0.25                         # 드리프트 임계값
 ```
+
+에러 또는 드리프트 이벤트 발생 시 알림 페이로드가 자동으로 전송됩니다.

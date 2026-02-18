@@ -27,9 +27,9 @@ Golden 데이터는 세 가지 핵심 영역에서 사용됩니다:
 
 ### 2. 드리프트 감지 기준선
 
-[드리프트 레이더](/docs/vectorwave-drift)는 각 함수의 모든 Golden 항목에서 **중심점**(평균 벡터)을 계산합니다. 새 입력은 이 중심점과 비교되어, 거리가 임계값을 초과하면 드리프트 알림이 발생합니다.
+[드리프트 레이더](/docs/vectorwave-drift)는 **KNN 기반** 접근 방식을 사용합니다 — 새 입력이 들어오면 과거 성공 실행의 K-최근접 이웃과 비교합니다. 이웃까지의 평균 거리로 드리프트 발생 여부를 판단합니다.
 
-Golden 데이터가 많을수록 = 더 정확한 중심점 = 오탐 감소.
+과거 데이터가 많을수록 = 더 신뢰할 수 있는 드리프트 감지 = 오탐 감소.
 
 ### 3. 리플레이 테스트 기준선
 
@@ -74,16 +74,6 @@ for c in candidates:
 |---|---|
 | **STEADY** | 기존 Golden 중심점에 가까움 — 알려진 패턴을 강화 |
 | **DISCOVERY** | 중심점에서 먼 거리 — 새로운 유효한 패턴을 나타냄 |
-
-### Golden 항목 조회
-
-```python
-golden = dm.get_golden_dataset(
-    function_name="generate_response",
-)
-
-print(f"Golden dataset size: {len(golden)}")
-```
 
 > **VectorSurfer**: Golden Dataset 관리는 [VectorSurfer 대시보드](/vectorsurf)에 내장되어 있습니다 — 시각적으로 탐색, 승격, 관리하고 AI 추천 후보를 확인할 수 있습니다.
 

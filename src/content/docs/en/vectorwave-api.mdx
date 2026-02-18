@@ -50,17 +50,87 @@ def child_function(data):
     return process(data)
 ```
 
-No parameters — automatically inherits `trace_id` from the parent `@vectorize` call.
+Automatically inherits `trace_id` from the parent `@vectorize` call.
+
+### Optional Parameters
+
+`@trace_span` also accepts keyword arguments for fine-grained control:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `attributes_to_capture` | `List[str]` | `None` | Specific attributes to log for this span |
+| `capture_return_value` | `bool` | `False` | Store the span's return value |
+| `force_sync` | `bool` | `False` | Force synchronous DB write (bypass async logging) |
+
+```python
+@trace_span(capture_return_value=True, attributes_to_capture=["score"])
+def rank_results(results, score=0.5):
+    return sorted(results, key=lambda x: x["score"])
+```
 
 ## Environment Variables
 
+### Connection
+
 | Variable | Required | Default | Description |
 |---|---|---|---|
+| `WEAVIATE_HOST` | No | `localhost` | Weaviate hostname |
+| `WEAVIATE_PORT` | No | `8080` | Weaviate HTTP port |
+| `WEAVIATE_GRPC_PORT` | No | `50051` | Weaviate gRPC port |
+| `WEAVIATE_API_KEY` | For WCS | — | Weaviate Cloud API key |
+
+### Vectorizer
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `VECTORIZER` | No | `weaviate_module` | Embedding provider: `weaviate_module`, `openai_client`, `huggingface`, or `none` |
 | `OPENAI_API_KEY` | For AI features | — | OpenAI API key for embeddings, auto-docs, healing, RAG |
-| `WEAVIATE_URL` | No | `http://localhost:8080` | Weaviate database URL |
-| `VECTORWAVE_VECTORIZER` | No | `huggingface` | Embedding provider: `huggingface` or `openai_client` |
+| `HF_MODEL_NAME` | No | `sentence-transformers/all-MiniLM-L6-v2` | HuggingFace model for `huggingface` vectorizer |
+| `WEAVIATE_VECTORIZER_MODULE` | No | `text2vec-openai` | Weaviate built-in vectorizer module name |
+| `WEAVIATE_GENERATIVE_MODULE` | No | `generative-openai` | Weaviate generative module name |
+
+### GitHub (Self-Healing)
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
 | `GITHUB_TOKEN` | For auto-PR | — | GitHub personal access token |
-| `GITHUB_REPO` | For auto-PR | — | GitHub repository (format: `org/repo`) |
+| `GITHUB_REPO_NAME` | For auto-PR | — | GitHub repository (format: `org/repo`) |
+| `GITHUB_BASE_BRANCH` | No | `main` | Base branch for auto-PR |
+
+### Drift Detection and Alerting
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DRIFT_DETECTION_ENABLED` | No | `False` | Enable drift detection |
+| `DRIFT_DISTANCE_THRESHOLD` | No | `0.25` | Distance threshold for drift alerts |
+| `DRIFT_NEIGHBOR_AMOUNT` | No | `5` | Number of neighbors for KNN drift check |
+| `ALERTER_STRATEGY` | No | `none` | Alert strategy: `none` or `webhook` |
+| `ALERTER_WEBHOOK_URL` | For alerts | — | Webhook URL for alerts (Discord, Slack, etc.) |
+| `ALERTER_MIN_LEVEL` | No | `ERROR` | Minimum alert level |
+
+### Performance Tuning
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `BATCH_THRESHOLD` | No | `20` | Number of objects before batch flush |
+| `FLUSH_INTERVAL_SECONDS` | No | `2.0` | Time interval for batch flush (seconds) |
+| `ASYNC_LOGGING` | No | `False` | Enable async database logging for lower latency |
+
+### File Paths
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `CUSTOM_PROPERTIES_FILE_PATH` | No | `.weaviate_properties` | Custom schema properties file |
+| `IGNORE_ERROR_FILE_PATH` | No | `.vtwignore` | Error suppression file |
+| `FAILURE_MAPPING_FILE_PATH` | No | `.vectorwave_errors.json` | Error code mapping file |
+
+### Data and Tags
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SENSITIVE_FIELD_NAMES` | No | `password,api_key,token,secret,auth_token` | Comma-separated field names to mask in logs |
+| `RECOMMENDATION_STEADY_MARGIN` | No | `0.05` | Golden Dataset recommendation STEADY margin |
+| `RECOMMENDATION_DISCOVERY_MARGIN` | No | `0.15` | Golden Dataset recommendation DISCOVERY margin |
 | `VECTORWAVE_TAGS_*` | No | — | Global tags (e.g., `VECTORWAVE_TAGS_ENV=production`) |
 
 ## Core Functions
@@ -83,17 +153,6 @@ from vectorwave import update_database_schema
 update_database_schema()
 ```
 
-### find_by_trace_id(trace_id)
-
-Retrieves all spans for a distributed trace.
-
-```python
-from vectorwave import find_by_trace_id
-
-spans = find_by_trace_id("abc-123")
-# Returns: [{ function_name, span_id, duration_ms, status, ... }]
-```
-
 ### search_functions(query, limit)
 
 Vector search over stored function metadata.
@@ -104,18 +163,60 @@ from vectorwave import search_functions
 results = search_functions(query="authentication", limit=5)
 ```
 
-### search_executions(query, limit, filters)
+### search_executions(limit, filters, sort_by, sort_ascending)
 
-Vector search over execution logs with optional filters.
+Search execution logs with filtering and sorting. Unlike `search_functions`, this uses filter-based lookup rather than vector search.
 
 ```python
 from vectorwave import search_executions
 
+# Recent errors
 results = search_executions(
-    query="timeout errors",
     limit=10,
-    filters={"status": "error", "team": "backend"},
+    filters={"status": "ERROR", "duration_ms__gte": 100},
+    sort_by="timestamp_utc",
+    sort_ascending=False,
 )
+```
+
+Filter operators: exact match (default), `__not_equal`, `__gte`, `__gt`, `__lte`, `__lt`, `__like`.
+
+### search_functions_hybrid(query, limit, filters, alpha)
+
+Hybrid search (keyword + vector) over function definitions.
+
+```python
+from vectorwave import search_functions_hybrid
+
+results = search_functions_hybrid(
+    query="calculate loyalty points",
+    limit=5,
+    alpha=0.5,  # 0.0 = pure keyword, 1.0 = pure vector
+)
+```
+
+### search_errors_by_message(query, limit, filters)
+
+Semantic search over error messages. Uses vector similarity to find errors matching a natural language description.
+
+```python
+from vectorwave import search_errors_by_message
+
+results = search_errors_by_message(
+    query="timeout connecting to database",
+    limit=10,
+    filters={"function_name": "generate_response"},
+)
+```
+
+### generate_and_register_metadata()
+
+Triggers LLM-based metadata generation for all registered functions that have `auto=True`. Useful for batch-generating descriptions after initial setup.
+
+```python
+from vectorwave import generate_and_register_metadata
+
+generate_and_register_metadata()
 ```
 
 ### search_and_answer(query)
@@ -149,9 +250,7 @@ analysis = analyze_trace_log(
 from vectorwave import VectorWaveHealer
 
 healer = VectorWaveHealer(
-    model="gpt-4-turbo",     # LLM model
-    temperature=0.1,          # Generation temperature
-    max_tokens=2000,          # Max fix length
+    model="gpt-4-turbo",     # LLM model (only parameter)
 )
 ```
 
@@ -163,18 +262,7 @@ result = healer.diagnose_and_heal(
     lookback_minutes=60,      # Search errors in last N minutes
     create_pr=True,           # Create GitHub PR with fix
 )
-# Returns: { error_type, root_cause, fix_description, pr_url }
-```
-
-### batch_heal()
-
-```python
-results = healer.batch_heal(
-    lookback_minutes=120,
-    create_pr=True,
-    max_prs=5,
-)
-# Returns: [{ function_name, error_type, pr_url }]
+# Returns: str (LLM-suggested fix code or error message)
 ```
 
 ## VectorWaveReplayer
@@ -192,12 +280,23 @@ replayer = VectorWaveReplayer()
 results = replayer.replay(
     function_full_name="app.generate_response",
     limit=20,                 # Max executions to replay
-    golden_only=True,         # Only Golden Dataset entries
-    mode="semantic",          # "exact" or "semantic"
-    threshold=0.85,           # Similarity threshold (semantic mode)
-    update_baseline=False,    # Update Golden with new outputs
+    update_baseline=False,    # Update baseline values on mismatch
 )
-# Returns: { passed, failed, total, details: [...] }
+# Returns: { function, total, passed, failed, updated, failures }
+```
+
+For semantic comparison, use `SemanticReplayer`:
+
+```python
+from vectorwave import SemanticReplayer
+
+semantic_replayer = SemanticReplayer()
+results = semantic_replayer.replay(
+    function_full_name="app.generate_response",
+    limit=20,
+    similarity_threshold=0.85,  # Vector similarity threshold
+    semantic_eval=True,          # Use LLM-based semantic evaluation
+)
 ```
 
 ## VectorWaveDatasetManager
@@ -228,72 +327,45 @@ candidates = dm.recommend_candidates(
 )
 ```
 
-### get_golden_dataset()
-
-```python
-golden = dm.get_golden_dataset(function_name="generate_response")
-```
-
-## VectorWaveArchiver
-
-### Constructor
-
-```python
-from vectorwave import VectorWaveArchiver
-archiver = VectorWaveArchiver()
-```
-
-### export()
-
-```python
-archiver.export(
-    output_path="data/executions.jsonl",
-    function_name="generate_response",
-    date_range=("2025-01-01", "2025-03-31"),
-    golden_only=False,
-)
-```
-
-### archive_and_cleanup()
-
-```python
-archiver.archive_and_cleanup(
-    older_than_days=90,
-    export_path="archive/2025-q1.jsonl",
-    keep_golden=True,
-)
-```
-
 ## VectorWaveAutoInjector
 
-### Constructor
+Auto-injection uses class methods — no instance creation needed.
+
+### configure()
 
 ```python
 from vectorwave import VectorWaveAutoInjector
-injector = VectorWaveAutoInjector()
+
+# Set default configuration for all inject calls
+VectorWaveAutoInjector.configure(
+    auto=True,
+    capture_return_value=True,
+    team="ai-team",
+)
 ```
 
 ### inject()
 
 ```python
-injector.inject(
-    module="app.services.ai",
-    include=["func_a", "func_b"],   # Optional whitelist
-    exclude=["_private"],            # Optional blacklist
-    options={"auto": True, "team": "ai"},
+# Inject @vectorize into all functions in a module
+VectorWaveAutoInjector.inject(
+    target_module_path="app.services.ai",
+    recursive=False,          # Recursively scan submodules
+    team="ai-team",           # Override config per inject call
 )
 ```
 
-## configure_alerts()
+## Webhook Alerting
 
-```python
-from vectorwave import configure_alerts
+Alerts are configured via environment variables, not a function call:
 
-configure_alerts(
-    webhook_url="https://discord.com/api/webhooks/...",
-    drift_threshold=0.25,
-    events=["error", "drift", "healing"],
-    format="discord",        # "discord", "slack", or "json"
-    headers=None,            # Custom headers for JSON format
-)
+```bash
+# .env
+ALERTER_STRATEGY=webhook                              # Enable webhook alerts
+ALERTER_WEBHOOK_URL=https://discord.com/api/webhooks/...  # Webhook endpoint
+ALERTER_MIN_LEVEL=ERROR                               # Minimum alert level
+DRIFT_DETECTION_ENABLED=True                          # Enable drift alerts
+DRIFT_DISTANCE_THRESHOLD=0.25                         # Drift threshold
 ```
+
+Alert payloads are sent automatically when errors or drift events occur.

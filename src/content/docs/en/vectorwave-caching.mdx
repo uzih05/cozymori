@@ -72,38 +72,38 @@ def my_function(query: str):
 
 ## Cache Scope (Multi-tenancy)
 
-By default, the cache is global. Use `semantic_cache_scope` to isolate caches by project or user:
+By default, the cache is global. Use `semantic_cache_scope` to isolate caches by dynamically extracting filter values from function arguments at runtime:
 
 ```python
-# Project-level isolation
+# Per-user cache isolation
 @vectorize(
     semantic_cache=True,
-    semantic_cache_scope="project-alpha",
+    cache_threshold=0.95,
+    semantic_cache_scope=["user_id"],  # Extract from function args
 )
-def project_alpha_query(query: str):
-    return llm.complete(query, system_prompt=alpha_prompt)
+def personalized_query(user_id: str, query: str):
+    return llm.complete(query, user_context=get_user(user_id))
 
+# Multi-dimension cache isolation
 @vectorize(
     semantic_cache=True,
-    semantic_cache_scope="project-beta",
+    semantic_cache_scope=["user_id", "region"],  # Multiple scope keys
 )
-def project_beta_query(query: str):
-    return llm.complete(query, system_prompt=beta_prompt)
+def regional_query(user_id: str, region: str, query: str):
+    return llm.complete(query, region=region)
 ```
 
-Even if both functions receive identical queries, their caches are completely separate.
+When `semantic_cache_scope=["user_id"]` and the function is called with `fn(user_id="U123", query="...")`, the cache lookup automatically filters by `{"user_id": "U123"}`. This ensures each user gets their own isolated cache.
 
-### Dynamic Scope
-
-You can use runtime values for per-user caching:
+For static filters (not derived from function args), use `semantic_cache_filters`:
 
 ```python
 @vectorize(
     semantic_cache=True,
-    semantic_cache_scope=f"user-{current_user.id}",
+    semantic_cache_filters={"environment": "production"},
 )
-def personalized_query(query: str):
-    return llm.complete(query, user_context=current_user.profile)
+def production_query(query: str):
+    return llm.complete(query)
 ```
 
 ## Golden Dataset Priority
@@ -165,15 +165,19 @@ from vectorwave import search_executions
 
 # Find all cached executions for a function
 cached = search_executions(
-    function_name="expensive_llm_task",
-    filters={"cache_hit": True},
     limit=100,
+    filters={"function_name": "expensive_llm_task", "cache_hit": True},
+    sort_by="timestamp_utc",
 )
 
 print(f"Cache hits: {len(cached)}")
 ```
 
 > **VectorSurfer**: Real-time cache hit rates, performance metrics, and execution timelines are visualized in the [VectorSurfer dashboard](/vectorsurf) — monitor caching performance at a glance.
+
+## External Resources
+
+- [OpenAI API Documentation](https://platform.openai.com/docs) — Embedding API used for semantic similarity
 
 ## Next Steps
 

@@ -19,12 +19,12 @@ VectorWave captures function executions, and VectorSurfer turns that data into a
 
 ### Real-Time Dashboard
 
-A responsive card-based dashboard that shows all key metrics at a glance:
+A responsive widget grid dashboard that shows all key metrics at a glance:
 
-- **KPI Cards** — Total calls, success rate, average latency, cache hit rate
+- **KPI Cards** — Total calls, success rate, errors, cache hit rate, average duration
 - **Execution Timeline** — Function executions over time with success/error/cache breakdown
-- **Error Distribution** — Error types and frequencies
-- **Drift Monitor** — Visual distance from Golden Dataset centroid
+- **Token Usage** — LLM token consumption by category
+- **System Status** — Weaviate connection status and registered function count
 
 ### Trace Waterfall
 
@@ -53,6 +53,23 @@ Visual regression testing for AI functions:
 - Run replays with real-time progress
 - Compare expected vs actual outputs side-by-side
 - Supports both exact match and semantic comparison
+
+### Ask AI
+
+RAG-powered natural language Q&A over your VectorWave data:
+
+- Ask questions about your functions, errors, and execution patterns
+- AI retrieves relevant context from Weaviate and generates answers
+- Responses are automatically saved to AI History
+
+### AI History (Saved Responses)
+
+Browse and manage all AI-generated responses:
+
+- Filter by source (Ask AI / Healer), bookmark status, or keyword
+- Bookmark important responses for quick access
+- Free plan: 5 AI calls/day, responses locked after 24 hours
+- Pro plan: unlimited calls and full history access
 
 ### Semantic Search
 

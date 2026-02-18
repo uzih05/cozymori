@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Connect VectorWave to VectorSurfer and start monitoring.
+description: Sign up, connect your Weaviate instance, and start monitoring.
 order: 21
 category: VectorSurfer
 ---
@@ -9,11 +9,52 @@ category: VectorSurfer
 
 Before using VectorSurfer, you need:
 
-- **VectorWave** installed and configured in your Python project
+- **VectorWave** installed and configured in your Python project ([Installation](/docs/vectorwave-installation))
 - A running **Weaviate** instance with VectorWave data
 - A modern web browser
 
-## Step 1: Set Up VectorWave
+## Step 1: Sign Up
+
+Visit the VectorSurfer dashboard and create an account:
+
+**[Open VectorSurfer →](https://vectorsurfer.com)**
+
+1. Click **Sign Up**
+2. Enter your **email** and **password**
+3. Optionally add a **display name**
+4. Click **Sign Up** to create your account
+
+Already have an account? Click **Log In** and enter your email and password.
+
+## Step 2: Create a Weaviate Connection
+
+After signing in, you'll be directed to the **Projects** page. This is where you connect VectorSurfer to your Weaviate instance.
+
+1. Click **Create Connection**
+2. Choose a **connection type**:
+
+| Type | Description |
+|---|---|
+| **Self Hosted** | Your own Weaviate instance (Docker, Kubernetes, etc.) |
+| **WCS Cloud** | Managed instance on [Weaviate Cloud](https://console.weaviate.cloud/) |
+
+3. Fill in the connection details:
+
+| Field | Default | Description |
+|---|---|---|
+| **Name** | Default | A label for this connection (e.g., "Production") |
+| **Host** | `localhost` | Weaviate server hostname or IP |
+| **HTTP Port** | `8080` | Weaviate REST API port |
+| **gRPC Port** | `50051` | Weaviate gRPC port |
+| **API Key** | — | Authentication key (required for WCS Cloud, optional for self-hosted) |
+
+4. Click **Test Connection** to verify connectivity
+5. If the test passes, click **Create** to save the connection
+6. Click **Activate** on the connection card to make it active
+
+> **First time?** A quick-start guide appears at the bottom of the Projects page. Click **Start Guide** for a step-by-step walkthrough covering Weaviate setup and VectorWave installation.
+
+## Step 3: Set Up VectorWave
 
 If you haven't already, install VectorWave and start logging function executions:
 
@@ -32,42 +73,45 @@ def your_function(prompt: str):
     return result
 ```
 
-Once functions are decorated with `@vectorize`, every execution is automatically stored in Weaviate.
+Once functions are decorated with `@vectorize`, every execution is automatically stored in Weaviate. VectorSurfer reads from the same Weaviate instance and displays your data immediately.
 
 See the [VectorWave Quick Start](/docs/quickstart) for detailed setup instructions.
 
-## Step 2: Open the Dashboard
+## Step 4: Configure AI Features (Optional)
 
-Visit the VectorSurfer dashboard:
+AI-powered features like **Ask AI**, **Healer diagnosis**, and **semantic search** require an OpenAI API key.
 
-**[Open Dashboard →](https://vectorsurfer.com)**
+### Global API Key
 
-VectorSurfer reads from the same Weaviate instance that VectorWave writes to. Once connected, all your function data appears automatically.
+1. Go to **Settings** (gear icon in the sidebar)
+2. Open the **AI Settings** tab
+3. Enter your OpenAI API key (`sk-...`)
+4. Click **Save**
 
-## Step 3: Explore Your Data
+This key is used for all AI features across all connections.
 
-When VectorWave has recorded executions, the dashboard displays:
+### Per-Connection API Key
 
-- **KPI Cards** with real-time metrics
-- **Execution Timeline** showing function activity over time
-- **Function List** in the sidebar for filtering
+You can also set a separate OpenAI key for a specific connection:
 
-If the dashboard shows no data, make sure VectorWave has logged at least one function execution.
+1. Go to **Settings** → **Connections** tab
+2. Click the key icon next to a connection
+3. Enter the API key and save
 
-## Connecting to Weaviate
+Connections with an API key configured show an **AI Ready** badge on their card.
 
-VectorSurfer connects to the Weaviate instance configured in VectorWave. Ensure your Weaviate instance is accessible from the dashboard.
+> AI features are optional — the dashboard works for monitoring, tracing, and execution browsing without an OpenAI key.
 
-For local development, Weaviate typically runs on `http://localhost:8080`. For production, use your cloud Weaviate endpoint.
+## Step 5: Explore the Dashboard
 
-## Optional: AI Healer Setup
+Once your connection is active and VectorWave has recorded executions, the dashboard displays your data:
 
-To enable AI-powered error diagnosis and automatic GitHub PRs:
+- **KPI Cards** — Total executions, success rate, error rate, cache hit rate, average duration
+- **Execution Timeline** — Function activity over time
+- **Recent Errors** — Latest errors at a glance
+- **System Status** — Weaviate connection health
 
-- Configure an **OpenAI API key** in the dashboard settings
-- Connect a **GitHub repository** for auto-PR creation
-
-These features are optional — the dashboard works for monitoring and tracing without them.
+The dashboard is fully customizable — click the **Edit** button to add, remove, resize, and reorder widgets. See [Usage Guide](/docs/vectorsurf-features) for details on all available widgets.
 
 ## Next Steps
 
