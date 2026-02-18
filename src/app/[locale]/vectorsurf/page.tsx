@@ -49,7 +49,7 @@ export default function VectorSurfPage() {
           <ScrollReveal delay={0.3}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="https://test3-six-rose.vercel.app"
+                href="https://vectorsurfer.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-all duration-200 shadow-[0_0_24px_rgba(139,92,246,0.4)] hover:shadow-[0_0_32px_rgba(139,92,246,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
@@ -242,7 +242,7 @@ export default function VectorSurfPage() {
           <ScrollReveal delay={0.25}>
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="https://test3-six-rose.vercel.app"
+                href="https://vectorsurfer.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-violet hover:bg-violet/80 text-white font-semibold text-sm transition-all duration-200 shadow-[0_0_24px_rgba(139,92,246,0.4)] hover:shadow-[0_0_32px_rgba(139,92,246,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"

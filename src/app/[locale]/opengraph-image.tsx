@@ -205,7 +205,7 @@ export default async function Image({
             color: 'rgba(255,255,255,0.2)',
           }}
         >
-          cozymori.com
+          cozymori.net
         </div>
       </div>
     ),
